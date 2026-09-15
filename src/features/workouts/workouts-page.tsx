@@ -4,6 +4,9 @@ import type { WorkoutSession } from '../../domain/workout/types'
 import type { WorkoutDetail } from '../../data/repositories/workout-repository'
 import { ExercisePicker } from './exercise-picker'
 import { ExerciseBlockEditor } from './exercise-block-editor'
+import { Link } from 'react-router-dom'
+import { calculateWorkoutDuration } from '../../domain/workout/duration'
+import { formatDuration } from './workout-format'
 
 function localDate(): string {
   const date = new Date()
@@ -17,6 +20,7 @@ function localTime(): string {
 
 export function WorkoutsPage() {
   const [sessions, setSessions] = useState<WorkoutSession[]>([])
+  const [history, setHistory] = useState<WorkoutSession[]>([])
   const [date, setDate] = useState(localDate)
   const [startTime, setStartTime] = useState(localTime)
   const [activeId, setActiveId] = useState<string>()
@@ -25,6 +29,7 @@ export function WorkoutsPage() {
   async function refresh() {
     try {
       setSessions(await workoutLoggingService.listUnfinishedSessions())
+      setHistory(await workoutLoggingService.listAllSessions())
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : '无法读取未完成训练。')
     }
@@ -96,6 +101,32 @@ export function WorkoutsPage() {
               ))}
             </section>
           )}
+          <section className="family-management">
+            <h2>训练历史</h2>
+            {history
+              .filter((session) => session.endTime !== undefined)
+              .sort((left, right) =>
+                `${right.date}${right.startTime ?? ''}`.localeCompare(
+                  `${left.date}${left.startTime ?? ''}`,
+                ),
+              )
+              .map((session) => (
+                <Link
+                  className="exercise-row__main"
+                  key={session.id}
+                  to={`/workouts/${session.id}`}
+                >
+                  <strong>{session.date}</strong>
+                  <span>
+                    {session.startTime ?? '--'} – {session.endTime ?? '--'} ·{' '}
+                    {formatDuration(
+                      calculateWorkoutDuration(session.startTime, session.endTime),
+                    )}
+                  </span>
+                </Link>
+              ))}
+            {history.length === 0 && <p>还没有训练历史。</p>}
+          </section>
         </>
       )}
     </section>

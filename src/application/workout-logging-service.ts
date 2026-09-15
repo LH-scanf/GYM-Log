@@ -27,6 +27,16 @@ export class WorkoutLoggingService {
     return this.workouts.getWorkoutById(id)
   }
 
+  listAllSessions(): Promise<WorkoutSession[]> {
+    return this.workouts.listAllSessions()
+  }
+  moveBlock(id: string, direction: -1 | 1): Promise<void> {
+    return this.workouts.moveExerciseBlock(id, direction)
+  }
+  moveRecord(id: string, direction: -1 | 1): Promise<void> {
+    return this.workouts.moveExerciseRecord(id, direction)
+  }
+
   async listUnfinishedSessions(): Promise<WorkoutSession[]> {
     const sessions = await this.workouts.listSessionsByDateRange(
       '0000-01-01',

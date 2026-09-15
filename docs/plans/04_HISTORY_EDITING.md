@@ -562,17 +562,17 @@ Plan 04 明确不做：
 
 ## 8. Checklist
 
-- [ ] 04A — History Query / Weekly Grouping
-- [ ] 04B — Training Home / History List
-- [ ] 04C — Workout Detail
-- [ ] 04D — Historical Edit Mode
-- [ ] 04E — Historical Compatibility / Reorder
-- [ ] 04F — Delete Workout
-- [ ] 04G — Navigation / Mobile UX
-- [ ] Acceptance Criteria 全部满足
-- [ ] Required Test Scenarios 完成
-- [ ] Plan 00–03 Regression 全部通过
-- [ ] 数据库 schema version 仍为 `1`（若无人工批准的变更）
+- [x] 04A — History Query / Weekly Grouping
+- [x] 04B — Training Home / History List
+- [x] 04C — Workout Detail
+- [x] 04D — Historical Edit Mode
+- [x] 04E — Historical Compatibility / Reorder
+- [x] 04F — Delete Workout
+- [x] 04G — Navigation / Mobile UX
+- [x] Acceptance Criteria 全部满足
+- [x] Required Test Scenarios 完成
+- [x] Plan 00–03 Regression 全部通过
+- [x] 数据库 schema version 仍为 `1`（若无人工批准的变更）
 
 通用测试、自审、文档同步、Commit、Push 与停止规则统一遵循仓库根目录 `AGENTS.md`。
 

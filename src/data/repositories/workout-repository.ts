@@ -99,6 +99,46 @@ export class WorkoutRepository {
       .sortBy('date')
   }
 
+  async listAllSessions(): Promise<WorkoutSession[]> {
+    return this.database.workoutSessions.toArray()
+  }
+
+  async moveExerciseBlock(id: string, direction: -1 | 1): Promise<void> {
+    const block = assertFound(
+      await this.database.exerciseBlocks.get(id),
+      'Exercise block',
+      id,
+    )
+    const blocks = await this.listBlocksBySession(block.sessionId)
+    const index = blocks.findIndex((value) => value.id === id)
+    const next = index + direction
+    if (next < 0 || next >= blocks.length) return
+    ;[blocks[index], blocks[next]] = [blocks[next], blocks[index]]
+    await this.database.transaction('rw', this.database.exerciseBlocks, async () => {
+      await this.database.exerciseBlocks.bulkPut(
+        blocks.map((value, order) => ({ ...value, order, updatedAt: nowIso() })),
+      )
+    })
+  }
+
+  async moveExerciseRecord(id: string, direction: -1 | 1): Promise<void> {
+    const record = assertFound(
+      await this.database.exerciseRecords.get(id),
+      'Exercise record',
+      id,
+    )
+    const records = await this.listRecordsByBlock(record.exerciseBlockId)
+    const index = records.findIndex((value) => value.id === id)
+    const next = index + direction
+    if (next < 0 || next >= records.length) return
+    ;[records[index], records[next]] = [records[next], records[index]]
+    await this.database.transaction('rw', this.database.exerciseRecords, async () => {
+      await this.database.exerciseRecords.bulkPut(
+        records.map((value, order) => ({ ...value, order, updatedAt: nowIso() })),
+      )
+    })
+  }
+
   async addExerciseBlock(
     sessionId: string,
     exerciseId: string,

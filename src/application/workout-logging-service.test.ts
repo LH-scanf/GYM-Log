@@ -96,4 +96,29 @@ describe('WorkoutLoggingService', () => {
     expect(calculateWorkoutDuration('23:20', '00:35')).toBe(75)
     expect(finished).not.toHaveProperty('duration')
   })
+
+  it('lists history and reorders blocks and records without changing schema version', async () => {
+    const bench = await exercises.create({
+      name: '卧推',
+      recordSchema: benchSchema,
+      loadMode: 'EXTERNAL',
+    })
+    const session = await service.createSession({
+      date: '2026-09-15',
+      startTime: '18:00',
+      endTime: '19:00',
+    })
+    const first = await service.addBlock(session.id, bench.id)
+    const second = await service.addBlock(session.id, bench.id)
+    const firstRecord = await service.addRecord(first.id, { load: 40, reps: 8 })
+    await service.addRecord(first.id, { load: 45, reps: 6 })
+    await service.moveBlock(second.id, -1)
+    await service.moveRecord(firstRecord.id, 1)
+    const detail = await service.getWorkout(session.id)
+    expect((await service.listAllSessions()).map((value) => value.id)).toContain(
+      session.id,
+    )
+    expect(detail?.blocks.map((value) => value.block.id)).toEqual([second.id, first.id])
+    expect(detail?.blocks[1].records.map((value) => value.order)).toEqual([0, 1])
+  })
 })

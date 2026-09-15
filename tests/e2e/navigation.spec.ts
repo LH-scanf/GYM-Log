@@ -5,7 +5,7 @@ test('opens the training page and switches between the four primary tabs', async
 }) => {
   await page.goto('/')
 
-  await expect(page.getByRole('heading', { name: '训练' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '训练', exact: true })).toBeVisible()
 
   for (const { label, path } of [
     { label: '统计', path: '/statistics' },

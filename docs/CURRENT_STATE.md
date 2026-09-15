@@ -71,21 +71,21 @@ push: origin/master 成功
 ## 3. 当前状态
 
 - `master` 已与 `origin/master` 同步；
-- Plan 03 已完成并通过验收；
-- 当前等待 Plan 04 文档审核与实施。
+- Plan 04 已完成并通过质量门禁；
+- 数据库 schema version 仍为 `1`。
 
 ## 4. 下一阶段
 
-当前等待人工审核并执行：
-
-```text
-Plan 04 — History & Editing
-```
-
-Plan 04 只负责历史浏览、详情与编辑。
-
-在 Plan 04 人工验收前，禁止提前进入：
+Plan 04 人工验收后，才可以编写并审核：
 
 ```text
 Plan 05 — Statistics
+```
+
+Plan 04 已完成历史浏览、详情、编辑、重排与安全删除。
+
+在 Plan 05 人工验收前，禁止提前进入：
+
+```text
+Plan 06 — Import / Export
 ```
