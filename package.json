@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
+    "dexie": "^4.2.1",
     "react": "latest",
     "react-dom": "latest",
     "react-router-dom": "latest",
@@ -37,6 +38,7 @@
     "eslint": "latest",
     "eslint-plugin-react-hooks": "latest",
     "eslint-plugin-react-refresh": "latest",
+    "fake-indexeddb": "^6.2.5",
     "globals": "latest",
     "jsdom": "^26.1.0",
     "prettier": "latest",
