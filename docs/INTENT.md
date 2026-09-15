@@ -1,216 +1,254 @@
-# GymLog — INTENT
+# GymLog — 产品意图（INTENT）
 
-> Status: Draft v0.1  
-> Project type: Mobile-first PWA / Local-first personal tool  
-> Primary user: single-user, self-use  
-> Core goal: make gym logging fast enough to use during training, while preserving structured data for long-term progress analysis.
+> 状态：Draft v0.2  
+> 项目类型：Mobile-first PWA / Local-first 个人工具  
+> 主要用户：单用户、自用  
+> 核心目标：让健身房训练记录足够快，同时把数据保存成可长期统计、编辑、导入导出的结构化记录。
 
-## 1. Why this project exists
+## 1. 为什么做这个项目
 
-Existing fitness apps often optimize for courses, social features, coaching, calorie tracking, or generic workout templates. GymLog is intentionally narrower: it is a personal training log that should feel as quick as typing notes, but produce structured data that can later be searched, edited, charted, exported, and analyzed.
+现有健身 App 往往同时包含课程、社交、教练、饮食、热量、训练计划等大量功能。GymLog 不准备做成一个“健身平台”，而是专注解决一个更窄的问题：
 
-The core problem is not “how to build a fitness platform”. It is:
+**像记备忘录一样快速记录训练，但最终得到的是结构化、可统计的数据。**
 
-- record a training session quickly in the gym;
-- remember exactly what was done last time;
-- compare the same exercise over time;
-- see whether training frequency and performance are improving;
-- keep the data portable and owned by the user.
+核心需求是：
 
-## 2. Product principles
+- 在健身房里快速记录一次训练；
+- 几秒内知道“这个动作我上次练了什么”；
+- 长期比较同一个动作的表现变化；
+- 看清训练频率、训练时长和力量表现是否在进步；
+- 所有数据由用户自己拥有，可以完整导入、导出和备份。
 
-### 2.1 Logging first
+## 2. 产品原则
 
-The most frequent operation is recording a set / segment. It must require as few taps as possible.
+### 2.1 记录优先
 
-Creating or configuring an exercise may be slightly more complex, because that is a low-frequency operation. Once created, an exercise has a fixed recording schema and the workout page is generated from that schema.
+最高频操作是“记录一组/一段训练”，因此必须尽量少点击、少输入。
 
-### 2.2 Manual time is the source of truth
+创建动作属于低频操作，可以稍微复杂一些。一个动作创建完成后，它的记录结构固定，训练页面根据动作的 `RecordSchema` 自动生成输入 UI。
 
-GymLog is not a foreground timer.
+### 2.2 手动时间是真实数据源
 
-A session stores:
+GymLog **不是前台计时器**。
 
-- date;
-- arrival/start time entered manually;
-- departure/end time entered manually.
+一次训练记录：
 
-The UI may offer a “fill current time” shortcut, but it must not depend on a PWA remaining alive in the background.
+- 日期；
+- 手动输入的开始时间；
+- 手动输入的结束时间。
 
-### 2.3 Structured raw data is the source of truth
+UI 可以提供“填入当前时间”的快捷按钮，但不能依赖 PWA 一直存活在后台。
 
-The application stores raw workout records. Derived values such as PRs, estimated 1RM, monthly counts, heatmaps, trends, and streaks are calculated from raw data.
+### 2.3 原始训练记录是真相
 
-Statistics may be cached for performance, but cached results are disposable and must never become the canonical data source.
+数据库只把原始训练数据视为权威数据。
 
-### 2.4 Exercise variants are separate exercises when performance is not directly comparable
+以下内容都属于派生结果：
 
-Examples:
+- PR；
+- 估算 1RM；
+- 本月/今年训练次数；
+- 热力图；
+- 趋势线；
+- 连续训练记录。
 
-- 正手侧平举 / 反手侧平举;
-- 宽距正手高位下拉 / 窄距正手高位下拉;
-- 平板卧推 / 上斜卧推.
+这些统计可以做缓存，但缓存随时可以丢弃并重新计算，不能成为核心数据源。
 
-These should be independent exercises with independent progress curves.
+### 2.4 无法直接比较的动作变式，要拆成独立动作
 
-Related exercises may optionally belong to an Exercise Family, for example:
+例如：
 
-- 高位下拉
-  - 宽距正手高位下拉
-  - 窄距正手高位下拉
-- 反向山羊
-  - 反向山羊挺身
-  - 反向山羊举手
+- 正手侧平举 / 反手侧平举；
+- 宽距正手高位下拉 / 窄距正手高位下拉；
+- 平板卧推 / 上斜卧推。
 
-An Exercise Family is organizational only and is not directly logged.
+它们应该拥有独立的历史记录和独立的成长曲线。
 
-### 2.5 Flexible records, fixed schema per exercise
+相关动作可以选择归到同一个 `ExerciseFamily`（动作族）下：
 
-Different exercises require different fields.
+```text
+高位下拉
+├── 宽距正手高位下拉
+├── 窄距正手高位下拉
+└── 窄距反手高位下拉
+```
 
-Examples:
+```text
+反向山羊
+├── 反向山羊挺身
+└── 反向山羊举手
+```
 
-- 卧推: weight + reps;
-- 仰卧起坐: reps + optional extra load;
-- 辅助引体向上: assistance weight + reps;
-- 爬坡: incline + speed + duration;
-- 快走: duration + optional distance/speed.
+动作族只负责组织，不直接产生训练记录。
 
-The exercise defines which fields are required, optional, or disabled. The training page follows that schema.
+### 2.5 每个动作结构固定，但不同动作可以记录不同字段
 
-### 2.6 Local-first and portable
+例如：
 
-V1 should not require an account or server.
+- 卧推：重量 + 次数；
+- 仰卧起坐：次数 + 可选额外负重；
+- 辅助引体向上：辅助重量 + 次数；
+- 爬坡：坡度 + 速度 + 时长；
+- 快走：时长 + 可选距离/速度。
 
-Data is stored locally in the PWA and can be exported/imported as versioned JSON. CSV export may be added for analysis convenience, but JSON is the canonical interchange/backup format.
+创建动作时，需要明确每个字段是：
 
-Historic handwritten/plain-text logs do not need an in-app parser in V1. They can be converted externally into the stable GymLog JSON format and then imported.
+- `REQUIRED`：必填；
+- `OPTIONAL`：可选；
+- `DISABLED`：不使用。
 
-## 3. Primary user experience
+训练时不再临时决定“这个动作怎么记”。
 
-### Home / Training history
+### 2.6 Local-first，数据可迁移
 
-The home page is a chronological training history grouped by week.
+V1 不要求账号、服务器或云同步。
 
-Example:
+数据优先保存在 PWA 本地，并支持完整 JSON 导入/导出。
 
-- 本周
-  - 9月14日 · 18:12–19:31 · 1h19min
-  - 9月12日 · 18:06–19:15 · 1h09min
-- 上周
-  - 9月11日 · 18:17–19:46 · 1h29min
-  - 9月9日 · 20:07–-- · 未填写结束时间
+JSON 是标准备份和迁移格式；CSV 可以以后作为分析导出格式增加，但不是核心备份格式。
 
-Each session card opens the full record and allows editing.
+历史手写/文本训练记录不要求 V1 内置自然语言解析器。可以先由外部转换成标准 GymLog JSON，再直接导入。
 
-A prominent “新建训练” action starts a new session.
+## 3. 核心使用体验
 
-### New workout
+### 3.1 首页 / 训练历史
 
-1. Select date.
-2. Enter start time manually.
-3. Add one or more exercises.
-4. Record sets/segments using each exercise’s schema.
-5. Enter end time manually when leaving.
-6. Save.
+首页就是训练历史，按周分组，从新到旧排列。
 
-The session may be saved without an end time and completed later.
+示例：
 
-### Recording a strength exercise
+```text
+本周
+  9月14日 · 18:12–19:31 · 1h19min
+  9月12日 · 18:06–19:15 · 1h09min
 
-Example — 卧推:
+上周
+  9月11日 · 18:17–19:46 · 1h29min
+  9月9日 · 20:07–-- · 未填写结束时间
+```
 
-- 40 kg × 8 reps
-- 40 kg × 10 reps
-- 45 kg × 5 reps
+点击任意训练记录，可以查看当天详情并修改。
 
-Adding the next row should copy the previous row by default so the user only edits changed values.
+首页有明显的“新建训练”入口。
 
-### Recording bodyweight + optional load
+### 3.2 新建训练
 
-Example — 反向山羊挺身:
+基本流程：
 
-- 自重 × 20
-- 自重 × 20
-- +5 kg × 10
+1. 选择日期；
+2. 手动输入开始时间；
+3. 添加动作；
+4. 按动作 Schema 记录组/训练段；
+5. 离开健身房时手动填写结束时间；
+6. 保存。
 
-The stored load represents extra external load, not body weight.
+结束时间可以为空，以后补填。
 
-### Recording cardio
+### 3.3 普通力量动作
 
-Example — 爬坡:
+卧推示例：
 
-- incline 12
-- speed 5 km/h
-- duration 40 min
+```text
+40kg × 8
+40kg × 10
+45kg × 5
+```
 
-## 4. Statistics intent
+添加下一行时，默认复制上一行，让用户只修改变化的值。
 
-Statistics should answer three questions:
+### 3.4 自重 + 可选负重
 
-1. Am I training consistently?
-2. Am I getting stronger / performing better?
-3. What exactly changed over time?
+反向山羊挺身示例：
 
-The statistics experience should include:
+```text
+自重 × 20
+自重 × 20
++5kg × 10
+```
 
-- annual/monthly workout counts;
-- annual/monthly total workout duration;
-- a GitHub-style training heatmap/calendar;
-- per-exercise progress pages;
-- trend lines derived from raw data;
-- recent progress / PR changes.
+数据库里的 `load` 表示**额外负重**，不包含人体体重。
 
-For ordinary external-load strength exercises, useful views include:
+### 3.5 有氧
 
-- highest training weight;
-- estimated 1RM trend;
-- best reps at a selected fixed weight;
-- session-by-session raw history.
+爬坡示例：
 
-For assistance exercises, lower assistance is normally better and must be interpreted accordingly.
+```text
+坡度：12
+速度：5 km/h
+时长：40 min
+```
 
-For reps-only exercises, focus on highest reps and trend.
+## 4. 统计体系的目标
 
-For cardio, focus on duration and relevant configured fields such as speed, incline, and distance.
+统计页面主要回答三个问题：
 
-## 5. Scope boundaries for V1
+1. 我是否稳定地在训练？
+2. 我的能力是否在提升？
+3. 具体是哪些动作、哪些指标发生了变化？
 
-V1 is intentionally not:
+V1 统计包括：
 
-- a social fitness platform;
-- a workout video/course app;
-- a nutrition/calorie tracker;
-- an AI coaching system;
-- an Apple Health replacement;
-- a cloud-account product;
-- a generic health data warehouse.
+- 今年训练次数；
+- 今年训练时长；
+- 本月训练次数；
+- 本月训练时长；
+- GitHub 风格年度训练热力图；
+- 单动作统计页；
+- 根据原始记录实时生成的趋势图；
+- 最近进步/PR 变化。
 
-These may be explored later only if they clearly improve the core logging workflow.
+普通负重力量动作适合查看：
 
-## 6. Success criteria
+- 历史最高训练重量；
+- 估算 1RM；
+- 固定重量下的最佳次数；
+- 每次训练的原始历史记录。
 
-GymLog V1 is successful if:
+辅助重量动作必须正确理解“辅助越小通常越强”，不能把辅助重量上涨误判成进步。
 
-- a workout can be recorded comfortably on a phone in the gym;
-- adding the next set is faster than writing the same information in a generic notes app;
-- old sessions can be edited safely;
-- exercise variants remain statistically separate;
-- bodyweight, external load, and assistance load are represented correctly;
-- the user can answer “what did I do last time?” in a few seconds;
-- the user can see training consistency and exercise progress visually;
-- all data can be backed up and restored through JSON without a server.
+纯次数动作重点看次数变化。
 
-## 7. Product direction
+有氧动作根据动作开启的字段统计时长、速度、坡度、距离等。
 
-Initial direction:
+## 5. V1 明确不做什么
 
-- Mobile-first PWA;
-- local-first storage;
-- clean, restrained interface;
-- training history as the home page;
-- statistics as a separate top-level page;
-- exercise management as a separate top-level page;
-- settings/import/export as a separate top-level page.
+V1 不做：
 
-Desktop support can be considered later for review, analysis, and management, but mobile logging is the primary experience.
+- 健身社交；
+- 课程/视频；
+- 饮食记录；
+- 热量追踪；
+- AI 教练；
+- Apple Health 替代品；
+- 云账号系统；
+- 多用户系统；
+- 通用健康数据平台。
+
+以后只有在明显改善核心记录体验时，才考虑扩展。
+
+## 6. V1 成功标准
+
+GymLog V1 达到以下条件，就算产品方向成立：
+
+- 手机上在健身房可以舒服地记录完整训练；
+- 新增下一组比在普通备忘录里重新打一遍更快；
+- 历史训练可以安全修改；
+- 不同动作变式统计上彼此独立；
+- 普通负重、自重负重、辅助重量都能正确表达；
+- 几秒内可以回答“这个动作上次练了什么”；
+- 可以直观看到训练规律和动作进步；
+- 不依赖服务器，也能完整导入/导出全部数据。
+
+## 7. 当前产品方向
+
+V1 方向暂定：
+
+- Mobile-first PWA；
+- Local-first；
+- 简洁、克制的 UI；
+- 首页就是训练历史；
+- “统计”是独立一级页面；
+- “动作”是独立一级页面；
+- “设置/导入导出”是独立一级页面。
+
+桌面端以后可以用于查看、统计和管理，但手机训练记录始终是主要体验。

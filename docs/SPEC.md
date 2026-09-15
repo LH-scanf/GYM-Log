@@ -1,49 +1,49 @@
-# GymLog — SPEC
+# GymLog — 产品规格（SPEC）
 
-> Status: Draft v0.1  
-> Depends on: `INTENT.md`  
-> Purpose: define V1 product behavior, data semantics, core entities, and acceptance boundaries before implementation planning.
-
----
-
-## 1. System overview
-
-GymLog is a single-user, local-first workout logging PWA.
-
-The application consists of four primary product areas:
-
-- **训练** — weekly grouped workout history and new-session entry;
-- **统计** — workout consistency and exercise progress;
-- **动作** — exercise/family management and schema definition;
-- **设置** — import/export and application settings.
-
-V1 does not require authentication, cloud sync, or a backend service.
+> 状态：Draft v0.2  
+> 依赖：`INTENT.md`  
+> 目的：在进入实现计划前，明确 V1 的产品行为、数据语义、核心实体和验收边界。
 
 ---
 
-## 2. Domain model
+## 1. 系统概览
 
-Core relationship:
+GymLog 是一个单用户、Local-first 的健身记录 PWA。
+
+V1 有四个一级模块：
+
+- **训练**：按周查看训练历史 + 新建训练；
+- **统计**：训练规律 + 单动作成长趋势；
+- **动作**：管理动作族、动作和记录结构；
+- **设置**：导入/导出以及基础设置。
+
+V1 不需要登录、云同步和后端服务。
+
+---
+
+## 2. 核心领域模型
+
+核心关系：
 
 ```text
-ExerciseFamily (optional organizational parent)
+ExerciseFamily（可选的动作族/组织父级）
         ↓
-Exercise (loggable concrete exercise)
+Exercise（真正可以记录训练的具体动作）
         ↓
-ExerciseBlock (an occurrence of an exercise inside one workout)
+ExerciseBlock（某次训练里出现的一段动作）
         ↓
-ExerciseRecord (one set / cardio segment / record row)
+ExerciseRecord（某一组 / 某一段有氧 / 一条记录）
 
 WorkoutSession
         ↓
 ExerciseBlock[]
 ```
 
-### 2.1 ExerciseFamily
+### 2.1 ExerciseFamily（动作族）
 
-An Exercise Family groups related variants but cannot itself be logged.
+动作族用于组织相关变式，但自己不能直接被加入训练。
 
-Examples:
+例：
 
 ```text
 高位下拉
@@ -58,9 +58,9 @@ Examples:
 └── 反向山羊举手
 ```
 
-Family membership is optional. A standalone exercise such as `绳索面拉` does not need a synthetic one-child family.
+动作不强制必须属于动作族。像 `绳索面拉` 这种独立动作，不需要为了形式专门创建一个只有一个子项的动作族。
 
-Proposed fields:
+建议字段：
 
 ```ts
 ExerciseFamily {
@@ -73,30 +73,30 @@ ExerciseFamily {
 }
 ```
 
-Rules:
+规则：
 
-- a family is not selectable as a workout exercise;
-- renaming a family changes the name everywhere it is displayed;
-- archiving a family must not delete member exercises or historical records;
-- hard deletion is allowed only when it has no dependent references, otherwise archive.
+- 动作族不能直接作为训练动作选择；
+- 动作族改名后，全局显示统一变化；
+- 归档动作族不能删除其中的动作和历史记录；
+- 没有任何依赖时可以硬删除，否则优先归档。
 
 ---
 
-## 3. Exercise
+## 3. Exercise（动作）
 
-An Exercise is a concrete loggable movement.
+Exercise 是真正可以记录的具体动作。
 
-Examples:
+例如：
 
-- 卧推;
-- 宽距正手高位下拉;
-- 正手侧平举;
-- 反向山羊挺身;
-- 反向山羊举手;
-- 辅助引体向上;
-- 爬坡.
+- 卧推；
+- 宽距正手高位下拉；
+- 正手侧平举；
+- 反向山羊挺身；
+- 反向山羊举手；
+- 辅助引体向上；
+- 爬坡。
 
-Proposed fields:
+建议字段：
 
 ```ts
 Exercise {
@@ -113,46 +113,54 @@ Exercise {
 }
 ```
 
-### 3.1 Name semantics
+### 3.1 名称语义
 
-Exercise history stores `exerciseId`, not a duplicated historical name snapshot.
+历史记录只保存 `exerciseId`，不额外保存一份历史动作名称快照。
 
-Therefore, renaming an exercise updates its displayed name across all historical sessions.
+因此动作改名后，所有历史记录统一显示新名称。
 
-This behavior is intentional. The product should encourage users to name exercises carefully at creation time to reduce future renames.
+这是明确的产品选择。为了减少未来改名，创建动作时应该提醒用户把动作变式命名清楚。
 
-### 3.2 Variant rule
+### 3.2 什么时候要拆成不同动作
 
-Create a distinct Exercise when a variation materially changes performance comparability.
+只要变式会明显影响训练表现、导致历史数据不适合直接比较，就应拆成独立 Exercise。
 
-Create separate exercises for:
+应该拆分：
 
-- 正手 vs 反手 when it meaningfully changes the movement;
-- 宽距 vs 窄距;
-- 平板 vs 上斜;
-- 杠铃 vs 哑铃;
-- standard version vs a mechanically distinct variant.
+- 正手 / 反手；
+- 宽距 / 窄距；
+- 平板 / 上斜；
+- 杠铃 / 哑铃；
+- 机械结构明显不同的动作版本。
 
-Do **not** create separate exercises for one-off execution notes such as “today shoulder felt uncomfortable”. Those belong in notes.
+不应该为了单次状态拆动作，例如：
 
-Left/right side is not an exercise variant. Side is record-level data when enabled.
+```text
+今天肩膀不舒服
+今天座椅高了一格
+今天最后两次借力
+```
+
+这些属于 note。
+
+左/右侧也不是动作变式，而是 Record 级字段。
 
 ---
 
-## 4. RecordSchema
+## 4. RecordSchema（动作记录结构）
 
-Every exercise defines its allowed recording fields when the exercise is created or edited.
+每个动作在创建/编辑时，要确定它允许记录哪些字段。
 
-Each structured field has one of three requirements:
+每个结构化字段有三种状态：
 
 ```ts
 type FieldRequirement =
-  | 'DISABLED'
-  | 'OPTIONAL'
-  | 'REQUIRED'
+  | 'DISABLED'  // 不使用
+  | 'OPTIONAL'  // 可选
+  | 'REQUIRED'  // 必填
 ```
 
-Proposed schema:
+V1 建议结构：
 
 ```ts
 RecordSchema {
@@ -166,40 +174,38 @@ RecordSchema {
 }
 ```
 
-`note` is always optional and does not need to be enabled through RecordSchema.
+`note` 永远可选，不需要放进 RecordSchema 开关。
 
-### 4.1 Fixed V1 units
+### 4.1 V1 固定单位
 
-V1 uses fixed units:
+V1 不做英制/公制切换，统一使用：
 
 ```text
 load      kg
 speed     km/h
 duration  min
 distance  km
-incline   numeric treadmill incline value
-reps      integer count
+incline   数值型坡度
+reps      次数（整数）
 ```
 
-No lb/mile unit switching is required in V1.
+需要支持合理的小数：
 
-Numeric values must support decimals where appropriate:
+- 7.5 kg；
+- 4.5 km/h；
+- 3.25 km；
+- 30.5 min（如有需要）。
 
-- 7.5 kg;
-- 4.5 km/h;
-- 3.25 km;
-- 30.5 min if needed.
+`reps` 必须是非负整数。
 
-`reps` must be a non-negative integer.
-
-### 4.2 Schema examples
+### 4.2 Schema 示例
 
 #### 卧推
 
 ```text
 reps      REQUIRED
 load      REQUIRED
-others    DISABLED
+其他字段   DISABLED
 loadMode  EXTERNAL
 ```
 
@@ -208,7 +214,7 @@ loadMode  EXTERNAL
 ```text
 reps      REQUIRED
 load      OPTIONAL
-others    DISABLED
+其他字段   DISABLED
 loadMode  BODYWEIGHT_PLUS
 ```
 
@@ -249,9 +255,9 @@ loadMode  NONE
 
 ---
 
-## 5. LoadMode
+## 5. LoadMode（重量语义）
 
-LoadMode defines the semantic meaning of the `load` field.
+`load` 不只是一个数字，还需要明确这个数字是什么意思。
 
 ```ts
 type LoadMode =
@@ -261,75 +267,75 @@ type LoadMode =
   | 'ASSISTANCE'
 ```
 
-### NONE
+### 5.1 NONE
 
-The exercise does not use load as a meaningful metric.
+动作不使用重量作为有效指标。
 
-Examples:
+例如：
 
-- basic cardio;
-- a reps-only movement configured without external load.
+- 普通有氧；
+- 只记录次数且不需要负重的动作。
 
-### EXTERNAL
+### 5.2 EXTERNAL
 
-The entered weight is the primary external training resistance.
+输入重量就是主要外部阻力。
 
-Examples:
+例如：
 
-- 卧推;
-- 哑铃推肩;
-- 高位下拉;
-- 坐姿划船;
-- 绳索面拉.
+- 卧推；
+- 哑铃推肩；
+- 高位下拉；
+- 坐姿划船；
+- 绳索面拉。
 
-Typical interpretation: higher load at comparable reps may represent progress.
+一般情况下，在次数可比时，重量增加意味着能力提升。
 
-### BODYWEIGHT_PLUS
+### 5.3 BODYWEIGHT_PLUS
 
-The movement is bodyweight-based and `load` stores only extra external load.
+动作本身以自重为主，`load` 只记录额外负重。
 
-Examples:
+例如：
 
-- 仰卧起坐;
-- 山羊挺身;
-- 双杠臂屈伸;
-- 悬垂举腿 if later weighted.
+- 仰卧起坐；
+- 山羊挺身；
+- 双杠臂屈伸；
+- 后续可能加入负重的悬垂举腿。
 
-Semantics:
+语义：
 
 ```text
-load = null  => bodyweight only
-load = 5     => bodyweight + 5 kg
+load = null  => 自重
+load = 5     => 自重 + 5kg
 ```
 
-The user’s body mass is not added to the stored load in V1.
+V1 不把人体体重计入 load。
 
-### ASSISTANCE
+### 5.4 ASSISTANCE
 
-The load represents assistance rather than resistance.
+`load` 表示器械提供的辅助重量，而不是阻力重量。
 
-Example:
+例如辅助引体向上。
 
-- assisted pull-up machine.
+一般情况下，在次数可比时：
 
-Typical interpretation: lower assistance at comparable reps represents progress.
+**辅助重量越小，能力越强。**
 
-Statistics must not treat increasing assistance as a strength PR.
+统计逻辑禁止把辅助重量上升直接判定为“力量 PR”。
 
 ---
 
-## 6. WorkoutSession
+## 6. WorkoutSession（一次训练）
 
-A WorkoutSession represents one gym visit / training session.
+WorkoutSession 表示一次健身房训练。
 
-Proposed fields:
+建议字段：
 
 ```ts
 WorkoutSession {
   id: string
-  date: string               // local YYYY-MM-DD
-  startTime?: string         // local HH:mm
-  endTime?: string           // local HH:mm
+  date: string               // 本地 YYYY-MM-DD
+  startTime?: string         // 本地 HH:mm
+  endTime?: string           // 本地 HH:mm
   note?: string
 
   createdAt: string
@@ -337,29 +343,34 @@ WorkoutSession {
 }
 ```
 
-Rules:
+规则：
 
-- date is required;
-- start time is manually entered;
-- end time is manually entered;
-- the UI may offer “fill current time” shortcuts;
-- no background timer is the source of truth;
-- a session may be saved without `endTime`;
-- duration is derived from start/end time when both exist;
-- user must be able to edit date/start/end times later;
-- deleting a session requires explicit confirmation.
+- `date` 必填；
+- 开始时间由用户手动输入；
+- 结束时间由用户手动输入；
+- 可以提供“填入当前时间”快捷按钮；
+- 不依赖后台计时器；
+- 结束时间可以暂时为空；
+- 开始和结束时间同时存在时，训练时长实时计算；
+- 历史训练允许修改日期、开始时间、结束时间；
+- 删除整次训练必须二次确认。
 
-### 6.1 Overnight sessions
+### 6.1 跨午夜训练
 
-V1 should support an end time earlier than start time by interpreting it as crossing midnight **only if explicitly allowed by validation/UI**. If implementation complexity is undesirable, V1 may instead reject this case and document the limitation. This should be resolved during implementation planning.
+是否允许 `endTime < startTime` 并自动理解为跨天，目前暂不拍板。
+
+这个问题进入 Plan/实现阶段再决定：
+
+- 支持跨午夜；或
+- V1 暂时禁止，并明确提示。
 
 ---
 
-## 7. ExerciseBlock
+## 7. ExerciseBlock（一次训练中的动作块）
 
-A session contains ordered ExerciseBlocks.
+一次 WorkoutSession 包含按顺序排列的多个 ExerciseBlock。
 
-Proposed fields:
+建议字段：
 
 ```ts
 ExerciseBlock {
@@ -371,23 +382,23 @@ ExerciseBlock {
 }
 ```
 
-Rules:
+规则：
 
-- the same Exercise may appear more than once in one WorkoutSession;
-- blocks preserve user order;
-- blocks can be reordered;
-- deleting a block deletes its contained ExerciseRecords after confirmation/undo policy is defined;
-- block-level note is optional.
+- 同一个 Exercise 在一次训练中允许出现多次；
+- 保留用户实际训练顺序；
+- 支持调整动作顺序；
+- 删除动作块时会删除其中的 ExerciseRecord，具体撤销/确认交互后续确定；
+- 允许动作级 note。
 
-Do not model session exercises as `Map<exerciseId, ...>` because duplicate occurrences must be allowed.
+不能用 `Map<exerciseId, ...>` 存一次训练里的动作，因为同一个动作可能出现两次。
 
 ---
 
-## 8. ExerciseRecord
+## 8. ExerciseRecord（单条训练记录）
 
-ExerciseRecord is the generic row used for both strength sets and cardio segments.
+ExerciseRecord 是统一记录单元，可以表示力量训练的一组，也可以表示有氧的一段。
 
-Proposed fields:
+建议字段：
 
 ```ts
 ExerciseRecord {
@@ -407,74 +418,72 @@ ExerciseRecord {
 }
 ```
 
-Rules:
+规则：
 
-- values are validated against the current Exercise RecordSchema when creating/editing a record;
-- required fields must be present;
-- disabled fields must not be created by the normal UI;
-- optional fields may be null/absent;
-- historical records remain valid if the Exercise schema changes later;
-- the application must not silently rewrite old raw records when schema changes;
-- record order is stable and editable.
+- 创建/编辑时按照 Exercise 当前 RecordSchema 校验；
+- REQUIRED 字段必须存在；
+- DISABLED 字段正常 UI 不允许录入；
+- OPTIONAL 字段可以为空；
+- Exercise Schema 后续变化时，旧历史记录仍然合法；
+- 修改 Schema 不得自动改写历史原始数据；
+- Record 顺序稳定且允许调整。
 
-### 8.1 Side semantics
+### 8.1 左右侧语义
 
-Side is record-level metadata, not an exercise variant.
+`side` 是 Record 级数据，而不是动作变式。
 
-Examples:
+例：
 
 ```text
 单臂绳索侧平举
-LEFT  5kg × 10
-RIGHT 5kg × 9
+LEFT   5kg × 10
+RIGHT  5kg × 9
 ```
 
-正手/反手 remains separate Exercise variants if they materially change the movement.
+正手/反手如果会明显影响动作表现，仍然拆成不同 Exercise。
 
 ---
 
-## 9. Exercise lifecycle and data integrity
+## 9. 动作生命周期与数据完整性
 
-### 9.1 Rename
+### 9.1 改名
 
-Renaming an Exercise updates the displayed name for all history because history references Exercise by ID.
+Exercise 改名后，所有历史记录统一显示新名称，因为历史只引用 Exercise ID。
 
-### 9.2 Archive
+### 9.2 归档
 
-Exercises with history should normally be archived, not deleted.
+已经存在历史记录的动作，默认只能归档，不应该直接删除。
 
-Archived exercises:
+归档后的动作：
 
-- remain visible in historical sessions;
-- remain available to statistics;
-- are hidden from normal “add exercise” lists by default;
-- can be restored.
+- 历史训练仍正常显示；
+- 仍参与统计；
+- 新增训练的动作列表默认隐藏；
+- 可以恢复。
 
-### 9.3 Hard delete
+### 9.3 硬删除
 
-Hard delete is allowed only when an Exercise has no historical references.
+只有完全没有历史引用的 Exercise 才允许硬删除。
 
-The same general rule applies to ExerciseFamily.
+ExerciseFamily 同理。
 
-### 9.4 Schema changes
+### 9.4 Schema 修改
 
-Changing RecordSchema affects future entry/edit validation but must not invalidate or mutate old raw records.
+RecordSchema 修改只影响未来录入/编辑校验，不修改旧的原始记录。
 
-Example:
-
-An exercise originally configured as reps-only can later enable optional load. Old reps-only history remains valid.
+例如某动作一开始只记录次数，后来开启“可选负重”，旧的纯次数历史仍然有效。
 
 ---
 
-## 10. Home / workout history specification
+## 10. 首页 / 训练历史
 
-Home is the `训练` top-level page.
+`训练` 是默认首页。
 
-### 10.1 Layout intent
+### 10.1 页面结构
 
-Sessions are grouped by week in descending time order.
+训练按周分组，并按时间倒序显示。
 
-Example:
+示例：
 
 ```text
 本周
@@ -492,52 +501,52 @@ Example:
   未填写结束时间
 ```
 
-Requirements:
+要求：
 
-- newest week first;
-- newest session first inside each week;
-- cards are fully clickable;
-- clicking opens session details;
-- session detail allows editing;
-- incomplete time must be represented explicitly, not fabricated;
-- a prominent `新建训练` action is always easy to reach.
+- 最新周在最上面；
+- 同一周内最新训练在最上面；
+- 整张训练卡都可以点击；
+- 点击进入训练详情；
+- 训练详情可以编辑；
+- 未填写结束时间时必须明确显示，不能伪造时长；
+- “新建训练”始终容易触达。
 
-Optional later enhancement:
+后续可选增强：
 
-- display a configurable “training week number” in addition to calendar week grouping.
+- 在“本周/上周”旁显示“训练第 N 周”。
 
 ---
 
-## 11. New workout flow
+## 11. 新建训练流程
 
-### 11.1 Create session
+### 11.1 创建 Session
 
-Fields:
+字段：
 
 ```text
-日期       required, default today
-开始时间   manual input, optional/current-time shortcut
+日期       必填，默认今天
+开始时间   手动输入，可提供“当前时间”快捷填充
 ```
 
-After creation, user enters the workout editor.
+创建后进入训练编辑器。
 
-### 11.2 Add exercise
+### 11.2 添加动作
 
-Open an exercise picker.
+打开动作选择弹窗。
 
-Picker should support:
+支持：
 
-- search by exercise name;
-- recently used exercises;
-- all active exercises;
-- optional family grouping;
-- archived exercises hidden by default.
+- 搜索动作名称；
+- 最近使用动作；
+- 全部未归档动作；
+- 可选按动作族分组；
+- 已归档动作默认隐藏。
 
-Selecting an exercise immediately creates an ExerciseBlock and generates its input UI from RecordSchema.
+选择动作后立即创建 ExerciseBlock，并根据 RecordSchema 生成输入 UI。
 
-### 11.3 Record entry
+### 11.3 记录训练
 
-Strength-style example:
+普通力量动作：
 
 ```text
 卧推
@@ -549,9 +558,9 @@ Strength-style example:
 [ + 添加一组 ]
 ```
 
-Adding a new record should copy the previous record’s values by default when that improves speed, especially for load/reps.
+新增一条 Record 时，默认复制上一条的已有值，尤其是重量/次数，减少输入。
 
-Bodyweight-plus example:
+自重 + 可选负重：
 
 ```text
 反向山羊挺身
@@ -563,7 +572,7 @@ Bodyweight-plus example:
 [ + 添加一组 ]
 ```
 
-Cardio example:
+有氧：
 
 ```text
 爬坡
@@ -575,82 +584,82 @@ Cardio example:
 [ + 添加一段 ]
 ```
 
-### 11.4 Record editing
+### 11.4 训练编辑能力
 
-The workout editor must support:
+训练编辑器必须支持：
 
-- add row/record;
-- delete row/record;
-- edit any value;
-- add exercise;
-- delete exercise block;
-- reorder exercise blocks;
-- edit session date/start/end time;
-- save with missing end time.
+- 新增记录；
+- 删除记录；
+- 修改任意字段；
+- 添加动作；
+- 删除动作块；
+- 调整动作顺序；
+- 修改训练日期/开始时间/结束时间；
+- 结束时间为空也可以保存。
 
-### 11.5 Last performance shortcut
+### 11.5 “上次表现”快捷入口
 
-Each ExerciseBlock should provide quick access to the most recent prior performance for that exact Exercise.
+每个 ExerciseBlock 都应该提供查看该动作**上一次训练表现**的快捷入口。
 
-Example:
+例如：
 
 ```text
 卧推                         上次 >
 ```
 
-Opening it should show the previous session date and raw records without leaving the current workout flow if possible.
+点开后展示上一次出现该 Exercise 的日期和全部原始记录，尽量不跳出当前训练流程。
 
-This is a high-priority usability feature.
-
----
-
-## 12. Session detail page
-
-A saved session detail page displays:
-
-- date;
-- start time;
-- end time;
-- derived duration;
-- ordered exercise blocks;
-- all raw records;
-- notes if present.
-
-Actions:
-
-- Edit;
-- Delete session.
-
-Editing uses the same underlying controls as the workout editor where practical.
+这是高优先级功能。
 
 ---
 
-## 13. Statistics architecture
+## 12. 训练详情页
 
-Statistics are derived from raw data and calculated at runtime.
+已保存训练的详情页显示：
 
-Derived results may be memoized/cached, but cache must be safely discardable.
+- 日期；
+- 开始时间；
+- 结束时间；
+- 实时计算出的训练时长；
+- 按顺序显示全部动作；
+- 每个动作下的全部原始记录；
+- note（如果有）。
 
-### 13.1 Performance expectation
+操作：
 
-A personal dataset is expected to remain relatively small even over many years.
+- 编辑；
+- 删除本次训练。
 
-Indexes should allow queries by:
-
-- session date;
-- session ID;
-- exercise ID;
-- exercise block ID.
-
-The implementation should avoid rescanning the entire dataset on every component render. Compute on demand and memoize per query/input revision where useful.
+编辑时尽量复用“新建训练”的同一套组件。
 
 ---
 
-## 14. Statistics — overall page
+## 13. 统计计算原则
 
-The statistics home page answers “am I training consistently?”.
+所有统计都从原始训练数据实时计算。
 
-V1 should include:
+可以做 memo/cache，但缓存必须可以随时丢弃。
+
+### 13.1 性能要求
+
+这是个人数据集，即使持续记录多年，规模也可控。
+
+常用索引应支持：
+
+- 按 Session 日期查询；
+- 按 Session ID 查询；
+- 按 Exercise ID 查询；
+- 按 ExerciseBlock ID 查询。
+
+实现上禁止每次 React 组件重渲染都全库扫描。应该按查询范围计算，并根据数据版本/依赖做 memoization 或轻量缓存。
+
+---
+
+## 14. 统计首页
+
+统计首页主要回答：**“我有没有稳定训练？”**
+
+V1 至少显示：
 
 ```text
 今年训练次数
@@ -659,143 +668,138 @@ V1 should include:
 本月训练时长
 ```
 
-### 14.1 Training heatmap
+### 14.1 年度训练热力图
 
-Provide a GitHub-style calendar/heatmap for the selected year.
+提供 GitHub Contribution 风格年度日历/热力图。
 
-Minimum V1 semantics:
+V1 最低语义：
 
 ```text
-no session  = empty cell
-session     = active cell
+无训练 = 空格
+有训练 = 激活格
 ```
 
-Optional enhanced intensity semantics:
+后续可以按当天总训练时长增加颜色深浅等级。
 
-- by total duration that day;
-- multiple visual intensity levels.
+点击有记录的日期，可以预览或进入当天训练。
 
-Clicking/tapping an active date should open or preview that day’s session(s).
+### 14.2 最近进步
 
-### 14.2 Recent progress
-
-A compact section may surface meaningful recent changes such as:
+可以提供一个紧凑区域显示最近的明显变化，例如：
 
 ```text
 卧推
-40kg -> 45kg max training weight
+最高训练重量 40kg -> 45kg
 
 辅助引体向上
-55kg -> 50kg assistance
+辅助重量 55kg -> 50kg
 ```
 
-The exact detection algorithm can be refined later; this feature should not block the base V1 statistics page.
+“最近进步”的精确识别算法可以后补，不阻塞 V1 基础统计。
 
 ---
 
-## 15. Statistics — exercise detail
+## 15. 单动作统计页
 
-Each Exercise has its own statistics page based on LoadMode and RecordSchema.
+每个 Exercise 根据 LoadMode 和 RecordSchema 展示不同统计。
 
-### 15.1 EXTERNAL load + reps
+### 15.1 EXTERNAL + reps
 
-Recommended metrics:
+建议指标：
 
-- highest training weight;
-- best reps at a selected fixed weight;
-- estimated 1RM;
-- number of sessions containing the exercise;
-- total recorded sets/records;
-- raw session history.
+- 历史最高训练重量；
+- 固定重量下的最佳次数；
+- 估算 1RM；
+- 包含该动作的训练次数；
+- 历史总 Record 数；
+- 原始训练历史。
 
-Recommended trend views:
+建议趋势切换：
 
 ```text
-力量水平 / estimated 1RM
+力量水平（估算1RM）
 最高训练重量
 固定重量次数
 ```
 
-The chart must preserve time order and be derived from actual records.
+折线图必须按真实时间顺序绘制。
 
 ### 15.2 BODYWEIGHT_PLUS
 
-Recommended metrics:
+建议指标：
 
-- best extra load;
-- best reps at bodyweight;
-- best reps at selected extra load;
-- session count;
-- history.
+- 最大额外负重；
+- 自重状态下最佳次数；
+- 指定额外负重下最佳次数；
+- 训练次数；
+- 历史记录。
 
-`load = null` is displayed as `自重`.
+`load = null` 在 UI 显示为“自重”。
 
 ### 15.3 ASSISTANCE
 
-Recommended metrics:
+建议指标：
 
-- lowest assistance weight;
-- best reps at a selected assistance level;
-- trend of assistance weight over time;
-- session count;
-- history.
+- 历史最低辅助重量；
+- 指定辅助重量下最佳次数；
+- 辅助重量趋势；
+- 训练次数；
+- 历史记录。
 
-UI must communicate that lower assistance can indicate improvement.
+UI 必须明确：**辅助重量下降通常表示进步。**
 
-### 15.4 Reps-only
+### 15.4 纯次数动作
 
-Recommended metrics:
+建议指标：
 
-- highest reps in one record;
-- trend of best reps per session;
-- session count;
-- history.
+- 单条 Record 最高次数；
+- 每次训练最佳次数趋势；
+- 训练次数；
+- 历史记录。
 
-### 15.5 Cardio
+### 15.5 有氧
 
-Metrics are based on enabled fields.
+根据启用字段统计：
 
-Possible metrics:
+- 累计时长；
+- 单次最长时长；
+- 时长趋势；
+- 如果启用 speed，则速度趋势；
+- 如果启用 incline，则坡度趋势；
+- 如果启用 distance，则距离趋势；
+- 训练次数。
 
-- cumulative duration;
-- longest single duration;
-- duration trend;
-- speed trend if enabled;
-- incline trend if enabled;
-- distance trend if enabled;
-- session count.
-
-V1 should not attempt to force one universal chart onto all exercise types.
+V1 不强行让所有动作共享同一种图表。
 
 ---
 
-## 16. Estimated 1RM
+## 16. 估算 1RM
 
-Estimated 1RM is derived, not stored.
+估算 1RM 属于派生数据，不入库。
 
-The exact formula must be centralized in one statistics module so it can be changed without data migration.
+计算公式必须集中在一个统计模块里，后续更换算法不需要迁移历史数据。
 
-The V1 formula choice (for example Epley or another standard estimate) should be finalized during implementation planning and documented in code/tests.
+V1 最终用 Epley 还是其他标准公式，在 Plan/实现阶段确认，并写入测试。
 
-Estimated 1RM should only be calculated for suitable external-load records and should not be applied blindly to:
+1RM 只对合适的外部负重力量动作计算，禁止无脑应用于：
 
-- assistance load;
-- cardio;
-- arbitrary non-strength schemas.
+- ASSISTANCE；
+- 有氧；
+- 与力量不相关的任意 Schema。
 
 ---
 
-## 17. Exercise management UI
+## 17. 动作管理 UI
 
-The `动作` page manages ExerciseFamily and Exercise records.
+`动作` 页面用于管理 ExerciseFamily 和 Exercise。
 
-### 17.1 Create exercise
+### 17.1 新建动作
 
-Fields:
+字段：
 
 ```text
-名称                required
-动作族              optional
+名称                必填
+动作族              可选
 
 次数                DISABLED / OPTIONAL / REQUIRED
 重量                DISABLED / OPTIONAL / REQUIRED
@@ -808,46 +812,46 @@ Fields:
 重量语义            NONE / EXTERNAL / BODYWEIGHT_PLUS / ASSISTANCE
 ```
 
-Validation rules:
+校验规则：
 
-- if load is DISABLED, loadMode should normally be NONE;
-- if load is enabled, loadMode must be meaningful and non-NONE;
-- at least one record field should be enabled;
-- exercise name must not be empty;
-- duplicate-name handling should warn rather than silently create ambiguous duplicates.
+- load 为 DISABLED 时，loadMode 通常应该是 NONE；
+- load 被启用时，loadMode 必须有明确非 NONE 语义；
+- 至少启用一个记录字段；
+- 动作名称不能为空；
+- 出现重复名称时要警告，不能静默创建两个难以区分的动作。
 
-### 17.2 Edit exercise
+### 17.2 编辑动作
 
-Allow:
+允许：
 
-- rename;
-- family reassignment;
-- schema change;
-- load mode change with warning if history exists;
-- archive/unarchive.
+- 改名；
+- 修改所属动作族；
+- 修改 RecordSchema；
+- 修改 LoadMode（如果已有历史必须给出提醒）；
+- 归档 / 取消归档。
 
-Changes must not mutate old ExerciseRecord values.
+任何修改都不能自动改写旧 ExerciseRecord 原始值。
 
 ---
 
-## 18. Import/export
+## 18. 导入 / 导出
 
-JSON is the canonical backup/interchange format.
+JSON 是标准备份和迁移格式。
 
-### 18.1 Export
+### 18.1 导出
 
-Export should include:
+完整导出至少包括：
 
-- schema version;
-- export timestamp;
-- ExerciseFamily;
-- Exercise;
-- WorkoutSession;
-- ExerciseBlock;
-- ExerciseRecord;
-- relevant settings required to reconstruct the database.
+- Schema/格式版本；
+- 导出时间；
+- ExerciseFamily；
+- Exercise；
+- WorkoutSession；
+- ExerciseBlock；
+- ExerciseRecord；
+- 恢复数据库所必需的相关设置。
 
-Suggested envelope:
+建议顶层结构：
 
 ```json
 {
@@ -865,49 +869,49 @@ Suggested envelope:
 }
 ```
 
-### 18.2 Import
+### 18.2 导入
 
-Import must:
+导入必须：
 
-1. validate file type/format/version;
-2. validate referential integrity;
-3. show a summary before destructive replacement/merge;
-4. avoid partial database corruption on failure;
-5. define an explicit V1 strategy: replace-all is preferred initially because this is a single-user self-use product.
+1. 校验文件格式和版本；
+2. 校验实体引用完整性；
+3. 在覆盖数据前展示摘要；
+4. 导入失败时不能留下半套损坏数据；
+5. V1 优先采用 **replace-all（整库替换）**，因为这是自用单用户软件。
 
-Merge/import conflict handling can be deferred unless clearly needed.
+复杂 merge/conflict 可以后置。
 
-### 18.3 Historic note conversion
+### 18.3 历史文本记录
 
-V1 does not require free-form text parsing.
+V1 不实现自由文本解析。
 
-Historic notes can be converted externally into the canonical JSON structure and imported.
+旧训练记录可以由外部转换为标准 JSON 后导入。
 
 ---
 
-## 19. Storage
+## 19. 本地存储
 
-Preferred V1 architecture:
+V1 推荐结构：
 
 ```text
 PWA
  ↓
 IndexedDB
  ↓
-Domain repositories / data access layer
+Repository / Data Access Layer
  ↓
-Statistics queries
+Statistics Query
 ```
 
-Requirements:
+要求：
 
-- all core functions work offline after the PWA is installed/loaded;
-- storage access is isolated behind a data layer;
-- UI components must not directly scatter IndexedDB logic everywhere;
-- schema versioning/migrations must exist from the first released version;
-- indexes should support common session/exercise queries.
+- PWA 安装/缓存完成后，核心功能离线可用；
+- IndexedDB 访问统一封装在数据层；
+- UI 组件不能到处直接写 IndexedDB；
+- 从第一个正式版本开始就有 Schema Version / Migration；
+- 为常用查询建立索引。
 
-Potential IndexedDB indexes:
+建议索引：
 
 ```text
 WorkoutSession.date
@@ -918,81 +922,81 @@ ExerciseRecord.exerciseBlockId
 
 ---
 
-## 20. Navigation
+## 20. 导航
 
-Recommended V1 bottom navigation:
+V1 推荐底部导航：
 
 ```text
 训练 | 统计 | 动作 | 设置
 ```
 
-Mobile-first behavior is the reference UX.
+Mobile-first 是参考体验。
 
-Desktop/responsive layouts may widen content but should preserve the same information architecture.
-
----
-
-## 21. Non-goals for V1
-
-Do not include unless scope is explicitly revised:
-
-- social feed;
-- friends/followers;
-- training videos;
-- coaching plans;
-- nutrition logging;
-- calorie tracking;
-- Apple Health integration;
-- wearable integration;
-- automatic gym check-in;
-- cloud account system;
-- multi-user support;
-- AI-generated workout programs;
-- free-form natural-language workout import.
+桌面/响应式版本可以放宽布局，但不改变信息架构。
 
 ---
 
-## 22. V1 acceptance criteria
+## 21. V1 非目标
 
-V1 is functionally acceptable when all of the following are true:
+除非后续明确改 Scope，否则 V1 不包含：
 
-1. User can create/edit/archive ExerciseFamily and Exercise entities.
-2. Exercise creation supports required/optional/disabled record fields.
-3. Load semantics support NONE, EXTERNAL, BODYWEIGHT_PLUS, and ASSISTANCE.
-4. User can create a WorkoutSession with date and manually entered times.
-5. Session can be saved without an end time.
-6. User can add multiple ExerciseBlocks in order.
-7. The same Exercise can appear twice in one session.
-8. User can add/edit/delete/reorder records.
-9. New strength records can efficiently reuse/copy previous row values.
-10. User can inspect the previous performance of an exercise while logging.
-11. Home groups sessions by week and opens editable session details.
-12. Historical exercise display follows current Exercise name after rename.
-13. Referenced exercises are archived rather than destructively deleted.
-14. Statistics show current-year/current-month session counts and durations.
-15. Statistics include an annual training heatmap/calendar.
-16. Exercise details provide appropriate statistics according to schema/load mode.
-17. Derived statistics are computed from raw records rather than stored as authoritative data.
-18. User can export a complete versioned JSON backup.
-19. User can import a valid backup without partial corruption.
-20. Core logging/history/statistics work offline.
+- 社交 Feed；
+- 好友/关注；
+- 训练视频；
+- 教练课程；
+- 饮食记录；
+- 热量统计；
+- Apple Health；
+- 可穿戴设备；
+- 自动到店打卡；
+- 云账号；
+- 多用户；
+- AI 自动生成训练计划；
+- 自由文本自然语言训练导入。
 
 ---
 
-## 23. Open decisions to resolve before implementation plan is finalized
+## 22. V1 验收标准
 
-These are intentionally left as planning decisions rather than product-intent questions:
+以下全部成立时，V1 功能层面可以认为完成：
 
-- exact frontend stack and component library;
-- exact IndexedDB wrapper/library;
-- cache/memoization strategy for statistics;
-- exact estimated-1RM formula;
-- exact annual heatmap visual intensity rule;
-- whether overnight sessions are supported in V1;
-- replace-all import transaction details;
-- migration/versioning implementation;
-- test pyramid and release gates;
-- exact PWA installation/update behavior;
-- whether “training week number” is configurable in V1 or deferred.
+1. 可以创建、编辑、归档 ExerciseFamily 和 Exercise；
+2. Exercise 创建支持 REQUIRED / OPTIONAL / DISABLED；
+3. 支持 NONE / EXTERNAL / BODYWEIGHT_PLUS / ASSISTANCE 四种 LoadMode；
+4. 可以创建带日期和手动时间的 WorkoutSession；
+5. 结束时间为空也可以保存；
+6. 一次训练可以按顺序添加多个 ExerciseBlock；
+7. 同一个 Exercise 可以在同一训练中出现两次；
+8. 可以新增、编辑、删除、调整 ExerciseRecord；
+9. 新增下一组时可以高效复制上一组数据；
+10. 训练过程中可以快速查看该动作“上次表现”；
+11. 首页按周显示训练历史，并可以进入可编辑详情；
+12. Exercise 改名后历史统一显示新名字；
+13. 有历史引用的动作采用归档而不是破坏性删除；
+14. 统计页显示今年/本月训练次数与训练时长；
+15. 有年度训练热力图；
+16. 单动作统计根据 Schema / LoadMode 正确变化；
+17. 派生统计全部从原始记录计算，不作为权威数据保存；
+18. 可以导出完整带版本号的 JSON；
+19. 可以安全导入合法备份，不产生半套损坏数据；
+20. 训练记录、历史查看、统计等核心能力离线可用。
 
-These should be resolved in implementation planning documents without changing the core product semantics above.
+---
+
+## 23. 进入 Plan 前仍需决定的问题
+
+下面这些问题先不写死在产品意图里，进入架构/实现计划时再决定：
+
+- 最终前端技术栈与组件库；
+- IndexedDB wrapper/library；
+- 统计缓存 / memoization 策略；
+- 估算 1RM 的最终公式；
+- 年度热力图颜色深浅规则；
+- V1 是否支持跨午夜训练；
+- replace-all 导入事务实现细节；
+- 数据库 migration/versioning 实现方式；
+- 测试层级与 Release Gate；
+- PWA 安装与更新策略；
+- “训练第 N 周”是否进入 V1。
+
+这些问题应该在后续 `ARCHITECTURE.md`、`DATA_MODEL.md` 和 `plans/` 中解决，而不是改变上面的核心产品语义。
