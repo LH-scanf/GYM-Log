@@ -4,6 +4,7 @@ import { workoutLoggingService } from '../../application/workout-logging-service
 import type { WorkoutDetail } from '../../data/repositories/workout-repository'
 import { calculateWorkoutDuration } from '../../domain/workout/duration'
 import { formatDuration, formatRecord } from './workout-format'
+import { AppIcon, TopBar } from '../../shared/components/ui'
 
 export function WorkoutDetailsPage() {
   const { sessionId } = useParams()
@@ -36,11 +37,15 @@ export function WorkoutDetailsPage() {
   }
   return (
     <section className="page">
-      <Link className="text-link" to="/">
-        返回训练
-      </Link>
+      <TopBar
+        backTo={
+          <Link aria-label="返回训练" className="icon-button" to="/">
+            <AppIcon name="back" />
+          </Link>
+        }
+        title="训练详情"
+      />
       <p className="eyebrow">{detail.session.date}</p>
-      <h1>训练详情</h1>
       {editing ? (
         <SessionEditor
           detail={detail}

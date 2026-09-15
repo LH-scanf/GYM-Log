@@ -4,6 +4,7 @@ import {
   type BackupSummary,
 } from '../../application/backup-service'
 import type { GymLogBackupV1 } from '../../data/backup/types'
+import { TopBar } from '../../shared/components/ui'
 
 function formatDateTime(value: string | undefined) {
   return value === undefined ? '尚未导出过备份' : new Date(value).toLocaleString('zh-CN')
@@ -83,8 +84,8 @@ export function SettingsPage() {
 
   return (
     <section className="page settings-page">
+      <TopBar title="设置" />
       <p className="eyebrow">本地数据与备份</p>
-      <h1>设置</h1>
       <section className="settings-card">
         <h2>导出备份</h2>
         <p>

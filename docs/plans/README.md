@@ -10,10 +10,29 @@
 04 History & Editing             PASS
 05 Statistics                    PASS
 06 Import / Export               PASS
-07 UI/UX Polish & Design System
-08 PWA Release
+07 UI/UX Polish & Design System  PASS
+08 PWA Release                   NEXT
 ```
 
-Plan 06 完成功能闭环；Plan 07 集中解决真机暴露的 UI/交互问题并正式建立设计系统；Plan 08 做最终 PWA Release 收口。
+## 07 — UI/UX Polish & Design System
 
-通用 Agent 执行规则仍由根目录 `AGENTS.md` 负责。
+已冻结并落实 Clean Fitness Utility 视觉方向，建立 Design Tokens、通用组件与高频交互规范，并完成：
+
+- 训练首页；
+- 训练记录；
+- Add Exercise Picker；
+- Previous Performance；
+- 动作管理；
+- 历史详情 / 编辑；
+- Statistics；
+- Settings / Backup；
+- 全局 Navigation / Feedback；
+- iPhone PWA 真机交互审计。
+
+Plan 07 不新增业务功能，不修改数据库 Schema。
+
+## 08 — PWA Release
+
+最终离线、更新、真机 Smoke、部署和 V1 Release 收口。
+
+通用 Agent 工作规则统一遵循根目录 `AGENTS.md`。

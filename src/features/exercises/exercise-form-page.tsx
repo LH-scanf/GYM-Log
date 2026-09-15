@@ -8,6 +8,7 @@ import type {
   LoadMode,
   RecordSchema,
 } from '../../domain/exercise/types'
+import { TopBar } from '../../shared/components/ui'
 
 const fieldLabels: Array<[keyof RecordSchema, string]> = [
   ['load', '重量'],
@@ -164,11 +165,12 @@ export function ExerciseFormPage({ mode }: ExerciseFormPageProps) {
 
   return (
     <section aria-labelledby="page-title" className="page exercise-form-page">
-      <Link className="text-link" to="/exercises">
-        返回动作列表
-      </Link>
+      <TopBar
+        backTo={<Link to="/exercises">返回动作列表</Link>}
+        headingId="page-title"
+        title={mode === 'create' ? '新建动作' : '编辑动作'}
+      />
       <p className="eyebrow">GymLog</p>
-      <h1 id="page-title">{mode === 'create' ? '新建动作' : '编辑动作'}</h1>
 
       {error === undefined ? null : (
         <p className="form-error" role="alert">

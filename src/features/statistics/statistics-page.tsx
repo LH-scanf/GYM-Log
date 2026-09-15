@@ -5,6 +5,7 @@ import type { Exercise } from '../../domain/exercise/types'
 import type { HeatmapDay, OverviewStatistics } from '../../domain/statistics/statistics'
 import type { WorkoutSession } from '../../domain/workout/types'
 import { formatDuration } from '../workouts/workout-format'
+import { EmptyState, TopBar } from '../../shared/components/ui'
 
 function localDate() {
   const date = new Date()
@@ -76,14 +77,28 @@ export function StatisticsPage() {
   }
   return (
     <section className="page statistics-page">
+      <TopBar title="统计" />
       <p className="eyebrow">从本地训练记录实时计算</p>
-      <h1>统计</h1>
       {!overview ? (
         <p role="status">正在计算统计…</p>
       ) : (
         <section className="statistics-summary" aria-label="训练概览">
-          <SummaryCard label={`${today.slice(0, 4)} 年训练`} summary={overview.year} />
-          <SummaryCard label={`${today.slice(0, 7)} 训练`} summary={overview.month} />
+          <SummaryCard
+            label={`${today.slice(0, 4)} 年训练次数`}
+            value={`${overview.year.count} 次`}
+          />
+          <SummaryCard
+            label={`${today.slice(0, 4)} 年训练时长`}
+            value={formatDuration(overview.year.duration)}
+          />
+          <SummaryCard
+            label={`${today.slice(0, 7)} 训练次数`}
+            value={`${overview.month.count} 次`}
+          />
+          <SummaryCard
+            label={`${today.slice(0, 7)} 训练时长`}
+            value={formatDuration(overview.month.duration)}
+          />
         </section>
       )}
       <section className="statistics-section">
@@ -159,7 +174,7 @@ export function StatisticsPage() {
           />
         </label>
         {matchedExercises.length === 0 ? (
-          <p className="empty-state">没有匹配的动作。</p>
+          <EmptyState title="没有匹配的动作" />
         ) : (
           <ul className="exercise-list statistics-exercises">
             {matchedExercises.map((exercise) => (
@@ -180,18 +195,11 @@ export function StatisticsPage() {
   )
 }
 
-function SummaryCard({
-  label,
-  summary,
-}: {
-  label: string
-  summary: { count: number; duration: number }
-}) {
+function SummaryCard({ label, value }: { label: string; value: string }) {
   return (
     <article className="summary-card">
       <span>{label}</span>
-      <strong>{summary.count} 次</strong>
-      <small>{formatDuration(summary.duration)}</small>
+      <strong>{value}</strong>
     </article>
   )
 }

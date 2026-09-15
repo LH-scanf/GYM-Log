@@ -12,6 +12,7 @@
 04 History & Editing      PASS
 05 Statistics             PASS
 06 Import / Export        PASS
+07 UI/UX Polish           PASS
 ```
 
 Plan 05：
@@ -25,23 +26,28 @@ push: origin/master 成功
 Plan 06：
 
 ```text
-状态：已完成，待本轮 Commit / Push 写入 hash
+commit: 0ffffa9
+message: feat: add backup import and export
+push: origin/master 成功
 ```
+
+Plan 07 已完成 Design System、全站视觉重构与移动端回归验证；提交信息以 Git 历史为准。
 
 数据库 schema version 仍为 `1`。
 
 ## 当前状态
 
-- GymLog 已部署到 Cloudflare Pages
-- iPhone PWA 已可真实使用
-- 真机试用暴露出较多 UI / 交互一致性问题
-- 当前 UI 只有 Mobile-first 与功能性样式，尚未正式冻结 Design System / Visual Direction
-- Import / Export 已完成：JSON 导出、导入校验摘要、replace-all 原子恢复与最近备份时间；
-- 下一功能阶段：Plan 07 — UI/UX Polish & Design System
+- GymLog 已部署到 Cloudflare Pages；
+- iPhone PWA 已可正常真实使用；
+- 核心功能闭环已经完成；
+- Clean Fitness Utility Design System 已冻结并落实到全站；
+- 四个主 Tab、训练 Sheet、记录卡、统计和备份页面已完成视觉重构；
+- Mobile Chromium 的 320–430px 回归、safe-area CSS 和键盘相关核心交互已验证；
+- 下一阶段：Plan 08 — PWA Release。
 
 ## 后续路线
 
 ```text
-07 UI/UX Polish & Design System
-08 PWA Release
+07 UI/UX Polish & Design System  PASS
+08 PWA Release                  NEXT
 ```

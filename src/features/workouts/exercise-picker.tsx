@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { Exercise } from '../../domain/exercise/types'
+import { EmptyState, Sheet } from '../../shared/components/ui'
 
 type ExercisePickerProps = {
   exercises: Exercise[]
@@ -17,25 +18,41 @@ export function ExercisePicker({ exercises, onClose, onSelect }: ExercisePickerP
   }, [exercises, query])
 
   return (
-    <section aria-label="选择动作" className="family-management" role="dialog">
-      <h2>添加动作</h2>
-      <label>
-        搜索动作
-        <input
-          autoFocus
-          onChange={(event) => setQuery(event.target.value)}
-          value={query}
-        />
-      </label>
-      {matching.map((exercise) => (
-        <button key={exercise.id} onClick={() => onSelect(exercise.id)} type="button">
-          {exercise.name}
-        </button>
-      ))}
-      {matching.length === 0 && <p>没有可用动作。</p>}
-      <button onClick={onClose} type="button">
-        取消
-      </button>
-    </section>
+    <Sheet onClose={onClose} title="添加动作">
+      <div className="sheet__content">
+        <label className="search-field">
+          搜索动作
+          <input
+            autoFocus
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="搜索动作名称"
+            type="search"
+            value={query}
+          />
+        </label>
+        {matching.length === 0 ? (
+          <EmptyState
+            description="试试其它关键词，或先到动作页创建动作。"
+            title="没有可用动作"
+          />
+        ) : (
+          <div className="exercise-list" aria-label="可选动作">
+            {matching.map((exercise) => (
+              <button
+                className="exercise-row__main"
+                key={exercise.id}
+                onClick={() => onSelect(exercise.id)}
+                type="button"
+              >
+                <strong>{exercise.name}</strong>
+                <span>
+                  {exercise.familyId === undefined ? '未归类动作' : '选择后立即添加'}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </Sheet>
   )
 }
