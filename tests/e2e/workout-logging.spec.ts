@@ -1,0 +1,26 @@
+import { expect, test } from '@playwright/test'
+
+test('records, restores, and completes a mobile workout', async ({ page }) => {
+  await page.goto('/exercises/new')
+  await page.getByLabel('动作名称').fill('卧推')
+  await page.getByLabel('重量').selectOption('REQUIRED')
+  await page.getByLabel('普通负重').check()
+  await page.getByRole('button', { name: '保存动作' }).click()
+
+  await page.getByRole('link', { name: '训练' }).click()
+  await page.getByLabel('日期').fill('2026-09-11')
+  await page.getByLabel('开始时间').fill('18:17')
+  await page.getByRole('button', { name: '新建训练' }).click()
+  await page.getByRole('button', { name: '添加动作' }).click()
+  await page.getByRole('button', { name: '卧推' }).click()
+  await page.getByLabel('重量').fill('40')
+  await page.getByLabel('次数').fill('8')
+  await page.getByRole('button', { name: '添加一组' }).click()
+  await page.getByRole('button', { name: '复制上一条' }).click()
+  await page.reload()
+  await page.getByRole('button', { name: '2026-09-11 · 18:17' }).click()
+  await expect(page.getByText('40kg × 8次')).toHaveCount(2)
+  await page.getByLabel('结束时间').fill('19:15')
+  await page.getByRole('button', { name: '完成训练' }).click()
+  await expect(page.getByRole('heading', { name: '训练', exact: true })).toBeVisible()
+})

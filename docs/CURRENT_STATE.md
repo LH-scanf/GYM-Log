@@ -9,8 +9,10 @@
 
 - `INTENT.md` — 已审核；
 - `SPEC.md` — 已审核；
-- `ARCHITECTURE.md` — 已用于 Plan 00 / 01；
-- `DATA_MODEL.md` — 已由 Plan 01 落地验证。
+- `ARCHITECTURE.md` — 已用于 Plan 00–02；
+- `DATA_MODEL.md` — 已由 Plan 01–02 落地验证；
+- `docs/AGENTS.md` — 统一 Agent 工作协议；
+- `plans/TEMPLATE.md` — 后续 Plan 标准模板。
 
 ## 2. 已完成阶段
 
@@ -40,20 +42,45 @@ push: origin/master 成功
 
 ### Plan 02 — Exercise Management
 
-状态：`IMPLEMENTED — awaiting human acceptance`
+状态：`PASS`
 
-已具备：真实 IndexedDB 驱动的动作列表、搜索和按动作族分组；动作族的创建、改名和空族删除保护；动作的创建、编辑、归档、恢复与历史引用删除保护；中文 RecordSchema / LoadMode 编辑器；移动端 E2E 覆盖创建、刷新、改名、归档与恢复。
+```text
+commit: ff61961
+message: feat: add exercise management
+push: origin/master 成功
+```
 
-## 3. 当前待处理
+已具备：真实 Exercise 列表与搜索、ExerciseFamily 管理、Exercise 创建/编辑、RecordSchema / LoadMode 配置、Archive / Restore / Delete Protection、移动端 E2E。
 
-Plan 02 的实现与质量门禁已完成，等待人工验收。
+数据库 schema version 仍为 `1`。
+
+### Plan 03 — Workout Logging
+
+状态：`PASS`
+
+已具备：训练创建与未完成训练恢复、动作选择与动作块、Schema 驱动的记录输入、记录复制/删除、上次表现、完成训练、跨午夜时长、放弃训练级联删除，以及移动端 E2E。
+
+数据库 schema version 仍为 `1`。
+
+## 3. 当前状态
+
+- `master` 已与 `origin/master` 同步；
+- Plan 02 完成报告显示 working tree clean；
+- 02A–02F 已完成并通过测试；
+- Plan 03 已实现并通过质量门禁。
 
 ## 4. 下一阶段
 
-Plan 02 人工验收后，才可以编写并审核：
+Plan 03 人工验收后，才可以编写并审核：
 
 ```text
-Plan 03 — Workout Logging
+Plan 04 — History & Editing
 ```
 
-当前禁止提前进入 Plan 03 Workout Logging。
+Plan 03 只负责训练中的记录流程。
+
+在 Plan 03 人工验收前，禁止提前进入：
+
+```text
+Plan 04 — History & Editing
+```
