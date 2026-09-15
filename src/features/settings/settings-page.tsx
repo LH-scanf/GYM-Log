@@ -1,5 +1,147 @@
-import { PlaceholderPage } from '../../shared/components/placeholder-page'
+import { useEffect, useRef, useState } from 'react'
+import {
+  backupApplicationService,
+  type BackupSummary,
+} from '../../application/backup-service'
+import type { GymLogBackupV1 } from '../../data/backup/types'
+
+function formatDateTime(value: string | undefined) {
+  return value === undefined ? '尚未导出过备份' : new Date(value).toLocaleString('zh-CN')
+}
 
 export function SettingsPage() {
-  return <PlaceholderPage description="设置与数据迁移将在后续阶段实现。" title="设置" />
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [lastBackupAt, setLastBackupAt] = useState<string>()
+  const [message, setMessage] = useState<string>()
+  const [error, setError] = useState<string>()
+  const [pendingBackup, setPendingBackup] = useState<GymLogBackupV1>()
+  const [summary, setSummary] = useState<BackupSummary>()
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      void backupApplicationService
+        .getSettings()
+        .then((settings) => setLastBackupAt(settings?.lastBackupAt))
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [])
+
+  async function exportBackup() {
+    setError(undefined)
+    setMessage(undefined)
+    try {
+      const backup = await backupApplicationService.createExport()
+      const json = `${JSON.stringify(backup, null, 2)}\n`
+      const fileName = `gymlog-backup-${backup.exportedAt.slice(0, 10)}.json`
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(
+        new Blob([json], { type: 'application/json;charset=utf-8' }),
+      )
+      link.download = fileName
+      link.click()
+      URL.revokeObjectURL(link.href)
+      await backupApplicationService.markExported(backup.exportedAt)
+      setLastBackupAt(backup.exportedAt)
+      setMessage(`备份已生成：${fileName}`)
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : '导出备份失败。')
+    }
+  }
+
+  async function selectFile(file: File | undefined) {
+    setError(undefined)
+    setMessage(undefined)
+    setPendingBackup(undefined)
+    setSummary(undefined)
+    if (file === undefined) return
+    try {
+      const prepared = backupApplicationService.prepareImport(await file.text())
+      setPendingBackup(prepared.backup)
+      setSummary(prepared.summary)
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : '备份文件无效。')
+    }
+  }
+
+  async function confirmRestore() {
+    if (pendingBackup === undefined) return
+    if (!window.confirm('确认完整替换当前设备上的 GymLog 数据？此操作不会合并现有数据。'))
+      return
+    try {
+      await backupApplicationService.restore(pendingBackup)
+      setMessage('备份已恢复。训练、动作和统计数据已重新读取。')
+      setPendingBackup(undefined)
+      setSummary(undefined)
+      const settings = await backupApplicationService.getSettings()
+      setLastBackupAt(settings?.lastBackupAt)
+    } catch (cause) {
+      setError(
+        cause instanceof Error ? cause.message : '恢复备份失败；当前数据未被替换。',
+      )
+    }
+  }
+
+  return (
+    <section className="page settings-page">
+      <p className="eyebrow">本地数据与备份</p>
+      <h1>设置</h1>
+      <section className="settings-card">
+        <h2>导出备份</h2>
+        <p>
+          GymLog 数据主要保存在当前设备的
+          IndexedDB。清除站点数据可能造成数据丢失，建议定期导出 JSON 备份。
+        </p>
+        <p className="field-hint">最近备份：{formatDateTime(lastBackupAt)}</p>
+        <button className="primary-button" onClick={() => void exportBackup()}>
+          导出 JSON 备份
+        </button>
+      </section>
+      <section className="settings-card">
+        <h2>导入备份</h2>
+        <p>导入会完整替换当前设备上的 GymLog 数据，不会合并。</p>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="application/json,.json"
+          hidden
+          onChange={(event) => void selectFile(event.target.files?.[0])}
+        />
+        <button onClick={() => inputRef.current?.click()}>选择 JSON 备份</button>
+        {summary && (
+          <section className="backup-summary" aria-live="polite">
+            <h3>导入摘要</h3>
+            <p>导出时间：{formatDateTime(summary.exportedAt)}</p>
+            <ul>
+              <li>动作族：{summary.exerciseFamilies}</li>
+              <li>动作：{summary.exercises}</li>
+              <li>训练：{summary.workoutSessions}</li>
+              <li>动作块：{summary.exerciseBlocks}</li>
+              <li>记录：{summary.exerciseRecords}</li>
+            </ul>
+            <button className="danger-button" onClick={() => void confirmRestore()}>
+              确认完整替换并恢复
+            </button>
+            <button
+              onClick={() => {
+                setPendingBackup(undefined)
+                setSummary(undefined)
+              }}
+            >
+              取消导入
+            </button>
+          </section>
+        )}
+      </section>
+      {message && (
+        <p className="form-warning" role="status">
+          {message}
+        </p>
+      )}
+      {error && (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      )}
+    </section>
+  )
 }
