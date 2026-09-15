@@ -36,20 +36,9 @@ Plan 是可验收的工程任务单；Prompt 只需要指定“执行哪个 Plan
 7. Checklist
 8. Next Stage
 
-通用内容不再复制进 Plan：
-
-- git status / diff；
-- lint / typecheck / build；
-- 自审流程；
-- Commit / Push；
-- 最终报告格式；
-- 禁止 force push / skip test 等统一规则。
-
-这些全部由 `AGENTS.md` 负责。
+通用 Git、质量门禁、自审、Commit、Push、停止与恢复规则全部由根目录 `AGENTS.md` 负责。
 
 未来新 Plan 以 `TEMPLATE.md` 为模板。
-
-Plan 00 / 01 已经完成，保留其历史格式，不为了统一样式重写已完成阶段。
 
 ---
 
@@ -62,18 +51,18 @@ Plan 00 / 01 已经完成，保留其历史格式，不为了统一样式重写�
         ↓
 02 Exercise Management    PASS
         ↓
-03 Workout Logging         PASS
+03 Workout Logging        PASS
         ↓
-04 History & Editing       NEXT
+04 History & Editing      PASS
         ↓
-05 Statistics
+05 Statistics             PASS
         ↓
 06 Import / Export
         ↓
 07 PWA Release
 ```
 
-`05+` 继续在前一阶段真正完成后再详细编写，避免计划与真实工程状态脱节。
+`06+` 继续在前一阶段真正完成后再详细编写，避免计划与真实工程状态脱节。
 
 ---
 
@@ -93,15 +82,15 @@ Plan 00 / 01 已经完成，保留其历史格式，不为了统一样式重写�
 
 ### 03 — Workout Logging
 
-新建 WorkoutSession、手动日期/开始时间、动作选择、Schema 驱动 Record 输入、添加/删除/复制一组、自动本地持久化、结束时间与未完成训练恢复。
+新建 WorkoutSession、手动日期/开始时间、动作选择、Schema 驱动 Record 输入、添加/删除/复制记录、自动本地持久化、结束时间与未完成训练恢复。
 
 ### 04 — History & Editing
 
-首页按周展示历史、训练详情、历史数据编辑与删除整次训练。
+训练首页按周展示历史、训练详情、历史数据安全编辑、顺序调整与删除整次训练。
 
 ### 05 — Statistics
 
-年度/月度训练统计、训练热力图、动作趋势、最大重量、固定重量最佳次数、1RM、辅助重量/纯次数/有氧对应统计。
+年度/月度训练统计、训练热力图、动作趋势、最大重量、固定重量最佳次数、估算 1RM、辅助重量 / 纯次数 / 有氧对应统计。
 
 ### 06 — Import / Export
 
@@ -121,7 +110,7 @@ iPhone PWA、真实离线、更新机制、Release Smoke 与 V1 发布收口。
 ../CURRENT_STATE.md
 ```
 
-不要在本文件同时维护 commit hash、working tree 等高频变化信息，避免多处状态漂移。
+不要在本文件同时维护高频 Git 状态，避免多处状态漂移。
 
 ---
 
@@ -130,8 +119,9 @@ iPhone PWA、真实离线、更新机制、Release Smoke 与 V1 发布收口。
 如果实现中发现：
 
 - Schema 无法覆盖真实训练；
-- 产品字段语义不清；
-- 导入导出无法无损恢复；
+- 统计语义会误导不同 LoadMode；
+- 历史数据无法无损统计；
 - 当前 Plan 必须改变上游产品行为；
+- 导入导出无法无损恢复；
 
 则暂停对应实现，回到上游文档讨论，不在代码里偷偷增加例外。
