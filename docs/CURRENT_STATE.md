@@ -38,25 +38,22 @@ push: origin/master 成功
 
 已具备：Domain Types、Dexie schema v1、Repository、RecordSchema/LoadMode validation、Archive/Delete 保护、Backup v1、原子 restore、数据层测试。
 
+### Plan 02 — Exercise Management
+
+状态：`IMPLEMENTED — awaiting human acceptance`
+
+已具备：真实 IndexedDB 驱动的动作列表、搜索和按动作族分组；动作族的创建、改名和空族删除保护；动作的创建、编辑、归档、恢复与历史引用删除保护；中文 RecordSchema / LoadMode 编辑器；移动端 E2E 覆盖创建、刷新、改名、归档与恢复。
+
 ## 3. 当前待处理
 
-在开始 Plan 02 前，应先把本轮更新后的项目文档正式纳入 Git，使 working tree 回到 clean。
-
-至少应包含：
-
-- `AGENTS.md`
-- `CURRENT_STATE.md`
-- 已审核的 `INTENT.md / SPEC.md / ARCHITECTURE.md / DATA_MODEL.md`
-- `docs/plans/`
-
-历史报告显示这些文档此前尚未形成稳定 docs baseline commit。
+Plan 02 的实现与质量门禁已完成，等待人工验收。
 
 ## 4. 下一阶段
 
-待文档基线 Commit + Push 完成后：
+Plan 02 人工验收后，才可以编写并审核：
 
 ```text
-Plan 02 — Exercise Management
+Plan 03 — Workout Logging
 ```
 
 当前禁止提前进入 Plan 03 Workout Logging。

@@ -220,4 +220,73 @@ describe('GymLog repositories', () => {
 
     expect((await database.exercises.get(benchPress.id))?.name).toBe('卧推')
   })
+
+  it('updates an exercise without changing its id or rewriting historical records', async () => {
+    const reverseHyper = await exercises.create({
+      name: '反向山羊挺身',
+      recordSchema: bodyweightSchema,
+      loadMode: 'BODYWEIGHT_PLUS',
+    })
+    const session = await workouts.createSession({ date: '2026-09-15' })
+    const block = await workouts.addExerciseBlock(session.id, reverseHyper.id)
+    const historicalRecord = await workouts.addExerciseRecord(block.id, { reps: 20 })
+
+    const updated = await exercises.update(reverseHyper.id, {
+      name: '反向山羊挺身（器械）',
+      recordSchema: { ...bodyweightSchema, side: 'OPTIONAL' },
+      loadMode: 'BODYWEIGHT_PLUS',
+    })
+
+    expect(updated.id).toBe(reverseHyper.id)
+    expect(updated.name).toBe('反向山羊挺身（器械）')
+    expect(
+      (await database.exerciseRecords.get(historicalRecord.id))?.side,
+    ).toBeUndefined()
+    expect((await workouts.getWorkoutById(session.id))?.blocks[0].exercise.id).toBe(
+      reverseHyper.id,
+    )
+  })
+
+  it('allows only empty families to be permanently deleted', async () => {
+    const emptyFamily = await families.create({ name: '空动作族' })
+    await families.hardDelete(emptyFamily.id)
+
+    expect(await families.getById(emptyFamily.id)).toBeUndefined()
+  })
+
+  it('keeps pull-down variations as separate exercises', async () => {
+    const names = ['宽距正手高位下拉', '窄距正手高位下拉', '窄距反手高位下拉']
+    const variations = await Promise.all(
+      names.map((name) =>
+        exercises.create({
+          name,
+          recordSchema: externalSchema,
+          loadMode: 'EXTERNAL',
+        }),
+      ),
+    )
+
+    expect(new Set(variations.map((variation) => variation.id)).size).toBe(3)
+    expect(variations.map((variation) => variation.name)).toEqual(names)
+  })
+
+  it('allows a family to be deleted after its exercises are moved to ungrouped', async () => {
+    const family = await families.create({ name: '高位下拉' })
+    const exercise = await exercises.create({
+      name: '宽距正手高位下拉',
+      familyId: family.id,
+      recordSchema: externalSchema,
+      loadMode: 'EXTERNAL',
+    })
+
+    await exercises.update(exercise.id, {
+      name: exercise.name,
+      recordSchema: exercise.recordSchema,
+      loadMode: exercise.loadMode,
+    })
+    await families.hardDelete(family.id)
+
+    expect((await exercises.getById(exercise.id))?.familyId).toBeUndefined()
+    expect(await families.getById(family.id)).toBeUndefined()
+  })
 })

@@ -301,14 +301,14 @@ Plan 02 不实现：
 
 ## 7. Checklist
 
-- [ ] 02A Exercise List
-- [ ] 02B ExerciseFamily
-- [ ] 02C Exercise Create / Edit
-- [ ] 02D RecordSchema / LoadMode Editor
-- [ ] 02E Archive / Restore / Delete Protection
-- [ ] 02F Mobile-first UX
-- [ ] Acceptance Criteria 全部满足
-- [ ] Required Test Scenarios 全部通过
+- [x] 02A Exercise List
+- [x] 02B ExerciseFamily
+- [x] 02C Exercise Create / Edit
+- [x] 02D RecordSchema / LoadMode Editor
+- [x] 02E Archive / Restore / Delete Protection
+- [x] 02F Mobile-first UX
+- [x] Acceptance Criteria 全部满足
+- [x] Required Test Scenarios 全部通过
 
 通用测试门禁、自审、文档同步、Commit、Push 与最终报告规则统一由根目录 `AGENTS.md` 执行。
 

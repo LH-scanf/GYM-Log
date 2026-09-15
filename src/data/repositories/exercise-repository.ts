@@ -11,6 +11,8 @@ export interface CreateExerciseInput {
   loadMode: LoadMode
 }
 
+export type UpdateExerciseInput = CreateExerciseInput
+
 export class ExerciseRepository {
   constructor(private readonly database: GymLogDatabase) {}
 
@@ -57,6 +59,33 @@ export class ExerciseRepository {
     const updated = {
       ...exercise,
       name: assertNonEmptyName(name, 'Exercise'),
+      updatedAt: nowIso(),
+    }
+
+    await this.database.exercises.put(updated)
+    return updated
+  }
+
+  async update(id: string, input: UpdateExerciseInput): Promise<Exercise> {
+    const exercise = assertFound(await this.getById(id), 'Exercise', id)
+    assertValidRecordSchema(input.recordSchema, input.loadMode)
+
+    if (input.familyId !== undefined) {
+      assertFound(
+        await this.database.exerciseFamilies.get(input.familyId),
+        'Exercise family',
+        input.familyId,
+      )
+    }
+
+    const updated: Exercise = {
+      ...exercise,
+      name: assertNonEmptyName(input.name, 'Exercise'),
+      ...(input.familyId === undefined
+        ? { familyId: undefined }
+        : { familyId: input.familyId }),
+      recordSchema: input.recordSchema,
+      loadMode: input.loadMode,
       updatedAt: nowIso(),
     }
 
