@@ -11,7 +11,7 @@
 - `SPEC.md` — 已审核；
 - `ARCHITECTURE.md` — 已用于 Plan 00–02；
 - `DATA_MODEL.md` — 已由 Plan 01–02 落地验证；
-- `docs/AGENTS.md` — 统一 Agent 工作协议；
+- 根目录 `AGENTS.md` — 统一 Agent 工作协议；
 - `plans/TEMPLATE.md` — 后续 Plan 标准模板。
 
 ## 2. 已完成阶段
@@ -58,6 +58,12 @@ push: origin/master 成功
 
 状态：`PASS`
 
+```text
+commit: 24babac
+message: feat: add workout logging
+push: origin/master 成功
+```
+
 已具备：训练创建与未完成训练恢复、动作选择与动作块、Schema 驱动的记录输入、记录复制/删除、上次表现、完成训练、跨午夜时长、放弃训练级联删除，以及移动端 E2E。
 
 数据库 schema version 仍为 `1`。
@@ -65,22 +71,21 @@ push: origin/master 成功
 ## 3. 当前状态
 
 - `master` 已与 `origin/master` 同步；
-- Plan 02 完成报告显示 working tree clean；
-- 02A–02F 已完成并通过测试；
-- Plan 03 已实现并通过质量门禁。
+- Plan 03 已完成并通过验收；
+- 当前等待 Plan 04 文档审核与实施。
 
 ## 4. 下一阶段
 
-Plan 03 人工验收后，才可以编写并审核：
+当前等待人工审核并执行：
 
 ```text
 Plan 04 — History & Editing
 ```
 
-Plan 03 只负责训练中的记录流程。
+Plan 04 只负责历史浏览、详情与编辑。
 
-在 Plan 03 人工验收前，禁止提前进入：
+在 Plan 04 人工验收前，禁止提前进入：
 
 ```text
-Plan 04 — History & Editing
+Plan 05 — Statistics
 ```

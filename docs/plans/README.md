@@ -62,9 +62,9 @@ Plan 00 / 01 已经完成，保留其历史格式，不为了统一样式重写�
         ↓
 02 Exercise Management    PASS
         ↓
-03 Workout Logging         NEXT
+03 Workout Logging         PASS
         ↓
-04 History & Editing
+04 History & Editing       NEXT
         ↓
 05 Statistics
         ↓
@@ -73,7 +73,7 @@ Plan 00 / 01 已经完成，保留其历史格式，不为了统一样式重写�
 07 PWA Release
 ```
 
-`04+` 继续在前一阶段真正完成后再详细编写，避免计划与真实工程状态脱节。
+`05+` 继续在前一阶段真正完成后再详细编写，避免计划与真实工程状态脱节。
 
 ---
 
