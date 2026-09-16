@@ -261,6 +261,14 @@ viewport 约定（2026-09-15 起）：
 
 ## 8.1 真机验收流程（2026-09-16 起）
 
+部署目标：
+
+```text
+Cloudflare Pages 项目   gym-log
+生产分支                master
+生产地址                https://gym-log-wa6.pages.dev
+```
+
 本地截图不再是验收终点。每个页面完成后按固定顺序执行：
 
 ```text

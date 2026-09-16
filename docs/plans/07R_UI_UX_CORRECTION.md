@@ -460,15 +460,21 @@ READY_FOR_VISUAL_REVIEW
 
 ```text
 2026-09-15
-07R-B / 07R-C / 07R-D / 07R-E  ——> 已人工视觉验收通过；07R-C 因 Record Row 密度复检重新打开
-07R-A Training Home            ——> 实现完成，等待人工视觉验收
+07R-B / 07R-D / 07R-E          ——> 已人工视觉验收通过
+07R-A Training Home            ——> 实现完成，人工初步认可
+07R-C Record Row               ——> 因视觉密度复检重新打开
 07R-F / 07R-G / 07R-H / 07R-I  ——> 未完成
+
+2026-09-16
+07R-A / 07R-C                  ——> 密度修正完成，已 Commit / Push / 部署，等待真机验收
+07R-F / 07R-G / 07R-H / 07R-I  ——> 未完成，本轮未触碰
 ```
 
-- 已人工确认的页面：**Active Workout / 训练记录页**。
-- 该页面**不完全冻结**：Record Row（07R-C）保留一次视觉密度修正窗口，其余部分不做无关调整。
-- 07R-A 附带全球 UI 文案原则：`DESIGN_SYSTEM.md §1.1 Copy`（去除非必要提示词）。
-- 07R 整体状态仍为 `READY_FOR_VISUAL_REVIEW`，**未 PASS**；未 Commit、未 Push。
+- 已人工确认的页面：**Active Workout / 训练记录页**（其 Record Row 密度修正待真机验收）。
+- 07R-A 附带全局 UI 文案原则：`DESIGN_SYSTEM.md §1.1 Copy`（去除非必要提示词）。
+- 07R 整体状态仍为 `READY_FOR_VISUAL_REVIEW`，**未 PASS**。
+- 本轮起改用真机验收流程：`UI_ACCEPTANCE.md §8.1`；
+  页面只有收到 `REAL_DEVICE_VISUAL_PASS` 才算冻结（`§8.2`）。
 - 验收 viewport 约定（后续所有页面沿用）：
 
 ```text

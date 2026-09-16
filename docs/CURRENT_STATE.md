@@ -37,7 +37,7 @@ Plan 07 已完成 Design System、全站视觉重构与移动端回归验证；�
 
 ## 当前状态
 
-- GymLog 已部署到 Cloudflare Pages；
+- GymLog 已部署到 Cloudflare Pages：https://gym-log-wa6.pages.dev（生产分支 `master`）；
 - iPhone PWA 已可正常真实使用；
 - 核心功能闭环已经完成；
 - Clean Fitness Utility Design System 已冻结并落实到全站；
