@@ -808,35 +808,35 @@ select:focus {
 }
 .record-list {
   display: grid;
-  gap: 2px;
+  gap: 0;
   margin: 0;
 }
 .record-row,
 .exercise-card__table-head {
   display: grid;
-  grid-template-columns: 24px minmax(0, 1fr) 16px minmax(0, 1fr) 44px;
+  grid-template-columns: 20px minmax(0, 1fr) 46px minmax(0, 1fr) 44px;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
 }
 .record-row--cardio,
 .exercise-card__table-head--cardio {
-  grid-template-columns: 24px repeat(3, minmax(0, 1fr)) 44px;
+  grid-template-columns: 20px repeat(3, minmax(0, 1fr)) 44px;
 }
 .record-row {
-  min-height: 46px;
+  min-height: 45px;
 }
 .record-row--cardio {
   --record-value-width: 3.2ch;
 }
 .exercise-card__table-head {
-  margin: 6px -8px 1px;
+  margin: 4px -8px 2px;
   border-radius: 8px;
   padding: 3px 8px;
   color: var(--color-tertiary);
   background: var(--color-subtle);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
-  line-height: 16px;
+  line-height: 15px;
   text-align: center;
 }
 .exercise-card__table-head > span:first-child {
@@ -846,9 +846,9 @@ select:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 3px;
   min-width: 0;
-  min-height: 40px;
+  height: 35px;
   border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 0 8px;
@@ -867,13 +867,13 @@ select:focus {
   min-height: 0;
   border: 0;
   border-radius: 0;
-  padding: 6px 0;
+  padding: 0;
   color: var(--color-text);
   background: transparent;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
-  line-height: 22px;
+  line-height: 20px;
   text-align: right;
 }
 .record-row__input:focus {
@@ -889,13 +889,13 @@ select:focus {
 .record-field__unit {
   flex: 0 0 auto;
   color: var(--color-tertiary);
-  font-size: 13px;
-  line-height: 16px;
+  font-size: 12px;
+  line-height: 14px;
   pointer-events: none;
 }
 .record-times {
   color: var(--color-tertiary);
-  font-size: 13px;
+  font-size: 12px;
   text-align: center;
 }
 .record-delete {
@@ -913,9 +913,9 @@ select:focus {
 }
 .exercise-card__add {
   width: 100%;
-  min-height: 40px;
-  margin-top: 8px;
-  font-size: 14px;
+  min-height: 36px;
+  margin-top: 6px;
+  font-size: 13px;
 }
 .record-row__index {
   color: var(--color-tertiary);

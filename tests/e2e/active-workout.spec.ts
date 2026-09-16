@@ -84,7 +84,7 @@ for (const viewport of viewports) {
     expect(listBox).not.toBeNull()
     expect(tableHeadBox).not.toBeNull()
 
-    // Record Row density contract: 46–50px row, 40–44px field, 112–120px wide.
+    // Record Row density contract: 44–46px row, 34–36px field, 96–106px wide.
     const rowBox = await page.locator('.record-row').first().boundingBox()
     const fieldBox = await page.locator('.record-field').first().boundingBox()
     const valueBox = await page.locator('.record-row__input').first().boundingBox()
@@ -93,17 +93,17 @@ for (const viewport of viewports) {
     expect(fieldBox).not.toBeNull()
     expect(valueBox).not.toBeNull()
     expect(unitBox).not.toBeNull()
-    expect(rowBox!.height).toBeGreaterThanOrEqual(46)
-    expect(rowBox!.height).toBeLessThanOrEqual(50)
-    expect(fieldBox!.height).toBeGreaterThanOrEqual(40)
-    expect(fieldBox!.height).toBeLessThanOrEqual(44)
+    expect(rowBox!.height).toBeGreaterThanOrEqual(44)
+    expect(rowBox!.height).toBeLessThanOrEqual(46)
+    expect(fieldBox!.height).toBeGreaterThanOrEqual(34)
+    expect(fieldBox!.height).toBeLessThanOrEqual(36)
     if (viewport.primary) {
-      expect(fieldBox!.width).toBeGreaterThanOrEqual(112)
-      expect(fieldBox!.width).toBeLessThanOrEqual(120)
+      expect(fieldBox!.width).toBeGreaterThanOrEqual(96)
+      expect(fieldBox!.width).toBeLessThanOrEqual(106)
     } else {
       // Wider screen: the field stays fluid and must still leave room for the
       // index, the ×, and the delete hit area inside the row.
-      expect(fieldBox!.width).toBeGreaterThanOrEqual(112)
+      expect(fieldBox!.width).toBeGreaterThanOrEqual(96)
       expect(fieldBox!.width * 2).toBeLessThanOrEqual(rowBox!.width - 84)
     }
 
@@ -130,14 +130,14 @@ for (const viewport of viewports) {
         head: style('.exercise-card__table-head'),
       }
     })
-    expect(typography.value!.fontSize).toBeGreaterThanOrEqual(18)
-    expect(typography.value!.fontSize).toBeLessThanOrEqual(20)
+    expect(typography.value!.fontSize).toBeGreaterThanOrEqual(16)
+    expect(typography.value!.fontSize).toBeLessThanOrEqual(17)
     expect(typography.value!.fontWeight).toBe('500')
     expect(typography.value!.textAlign).toBe('right')
-    expect(typography.unit!.fontSize).toBeGreaterThanOrEqual(13)
-    expect(typography.unit!.fontSize).toBeLessThanOrEqual(14)
-    expect(typography.head!.fontSize).toBeGreaterThanOrEqual(13)
-    expect(typography.head!.fontSize).toBeLessThanOrEqual(14)
+    expect(typography.unit!.fontSize).toBeGreaterThanOrEqual(12)
+    expect(typography.unit!.fontSize).toBeLessThanOrEqual(13)
+    expect(typography.head!.fontSize).toBeGreaterThanOrEqual(12)
+    expect(typography.head!.fontSize).toBeLessThanOrEqual(13)
 
     expect(await hasBodyOverflow()).toBe(false)
 
@@ -155,8 +155,8 @@ for (const viewport of viewports) {
       .locator('.record-row')
       .evaluateAll((rows) => rows.map((row) => row.getBoundingClientRect().y))
     const pitch = pitches[1] - pitches[0]
-    expect(pitch).toBeGreaterThanOrEqual(46)
-    expect(pitch).toBeLessThanOrEqual(50)
+    expect(pitch).toBeGreaterThanOrEqual(44)
+    expect(pitch).toBeLessThanOrEqual(46)
 
     await page.screenshot({
       path: `${reviewDir}/active-workout-sets-${viewport.label}.png`,
