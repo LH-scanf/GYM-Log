@@ -6,7 +6,9 @@ import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
   {
-    ignores: ['dist/', 'node_modules/', 'playwright-report/', 'test-results/'],
+    // `output/` 只放本地验收截图与临时探针，已被 .gitignore / .prettierignore 忽略，
+    // 这里必须一起忽略 —— 否则任何落在那里的 JS 都会变成上千条 lint error。
+    ignores: ['dist/', 'node_modules/', 'playwright-report/', 'test-results/', 'output/'],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
