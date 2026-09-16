@@ -46,6 +46,20 @@ export class StatisticsService {
     return this.exercises.list({ includeArchived: true })
   }
 
+  /**
+   * 统计页「趋势」卡的默认动作：训练场次最多的那个动作。
+   * 同场次时按 id 排序，保证结果稳定（否则 Map 插入顺序会随数据变更漂移）。
+   */
+  async mostTrainedExerciseId(): Promise<string | undefined> {
+    const counts = new Map<string, number>()
+    for (const block of await this.workouts.listAllBlocks()) {
+      counts.set(block.exerciseId, (counts.get(block.exerciseId) ?? 0) + 1)
+    }
+    return [...counts.entries()].sort(
+      (left, right) => right[1] - left[1] || left[0].localeCompare(right[0]),
+    )[0]?.[0]
+  }
+
   async exerciseStatistics(exerciseId: string): Promise<ExerciseStatistics | undefined> {
     const exercise = await this.exercises.getById(exerciseId)
     if (exercise === undefined) return undefined

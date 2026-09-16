@@ -4,7 +4,7 @@ import {
   type BackupSummary,
 } from '../../application/backup-service'
 import type { GymLogBackupV1 } from '../../data/backup/types'
-import { TopBar } from '../../shared/components/ui'
+import { PageHeader } from '../../shared/components/ui'
 
 function formatDateTime(value: string | undefined) {
   return value === undefined ? '尚未导出过备份' : new Date(value).toLocaleString('zh-CN')
@@ -84,11 +84,10 @@ export function SettingsPage() {
 
   return (
     <section className="page settings-page">
-      <TopBar title="设置" />
-      <p className="eyebrow">本地数据与备份</p>
+      <PageHeader title="设置" />
       <section className="settings-card">
         <h2>数据备份</h2>
-        <p>本地数据建议定期导出为 JSON 备份。</p>
+        <p>本地数据建议定期导出。</p>
         <p className="field-hint">最近备份：{formatDateTime(lastBackupAt)}</p>
         <button className="primary-button" onClick={() => void exportBackup()}>
           导出 JSON

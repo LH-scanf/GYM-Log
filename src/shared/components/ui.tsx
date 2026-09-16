@@ -12,6 +12,8 @@ type IconName =
   | 'delete'
   | 'chevron'
   | 'warning'
+  | 'clock'
+  | 'trend'
 
 const paths: Record<IconName, ReactNode> = {
   training: (
@@ -58,6 +60,13 @@ const paths: Record<IconName, ReactNode> = {
       <path d="M12 10.2v3.6m0 2.6v.4" />
     </>
   ),
+  clock: (
+    <>
+      <circle cx="12" cy="12" r="8" />
+      <path d="M12 7.6V12l3 1.8" />
+    </>
+  ),
+  trend: <path d="M4 16.5 9 11l3.5 3.5L20 6.5m0 0h-4.5m4.5 0v4.5" />,
 }
 
 export function AppIcon({ name, size = 20 }: { name: IconName; size?: number }) {
@@ -95,6 +104,28 @@ export function TopBar({
       <div className="top-bar__side">{backTo}</div>
       <h1 id={headingId}>{title}</h1>
       <div className="top-bar__side top-bar__side--end">{action}</div>
+    </header>
+  )
+}
+
+/**
+ * 页面级页头：左对齐大标题 + 右侧动作槽。
+ * 与居中的 TopBar 区分——TopBar 用于有返回/工具按钮的二级页，
+ * PageHeader 用于底部 Tab 的一级页面（统计 / 设置）。
+ */
+export function PageHeader({
+  title,
+  action,
+  headingId,
+}: {
+  title: string
+  action?: ReactNode
+  headingId?: string
+}) {
+  return (
+    <header className="page-header">
+      <h1 id={headingId}>{title}</h1>
+      {action && <div className="page-header__action">{action}</div>}
     </header>
   )
 }

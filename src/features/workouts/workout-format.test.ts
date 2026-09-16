@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatCompactDate, formatSessionDate } from './workout-format'
+import { formatCompactDate, formatDuration, formatSessionDate } from './workout-format'
 
 const thisYear = new Date().getFullYear()
 const previousYear = `${thisYear - 1}-12-28`
@@ -38,5 +38,17 @@ describe('formatSessionDate', () => {
     expect(formatSessionDate(previousYear)).toBe(
       `${thisYear - 1}年12月28日 周${weekday(previousYear)}`,
     )
+  })
+})
+
+describe('formatDuration', () => {
+  it('drops a trailing zero-minute part so whole hours stay short', () => {
+    expect(formatDuration(60)).toBe('1h')
+    expect(formatDuration(180)).toBe('3h')
+  })
+
+  it('keeps both parts when there are leftover minutes', () => {
+    expect(formatDuration(226)).toBe('3h46min')
+    expect(formatDuration(45)).toBe('45min')
   })
 })

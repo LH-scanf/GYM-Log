@@ -26,10 +26,13 @@ export function formatRecord(record: ExerciseRecord, exercise?: Exercise): strin
     .join(' × ')
 }
 
+/** 统计页的累计时长。`formatCompactDuration` 会输出 `1h0min`，这里去掉多余的 `0min`。 */
 export function formatDuration(minutes: number | undefined): string {
-  return minutes === undefined
-    ? '未填写结束时间'
-    : `${Math.floor(minutes / 60) > 0 ? `${Math.floor(minutes / 60)}h` : ''}${minutes % 60}min`
+  if (minutes === undefined) return '未填写结束时间'
+  const hours = Math.floor(minutes / 60)
+  const rest = minutes % 60
+  if (hours === 0) return `${rest}min`
+  return rest === 0 ? `${hours}h` : `${hours}h${rest}min`
 }
 
 const weekdays = ['日', '一', '二', '三', '四', '五', '六']

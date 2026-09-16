@@ -3,6 +3,8 @@ import { Link, useParams } from 'react-router-dom'
 import { statisticsService } from '../../application/statistics-service'
 import type { Exercise } from '../../domain/exercise/types'
 import type { ExerciseStatistics, TrendPoint } from '../../domain/statistics/statistics'
+import { TrendChart } from './trend-chart'
+import { formatMetric } from './format'
 
 export function ExerciseStatisticsPage() {
   const { exerciseId = '' } = useParams()
@@ -157,7 +159,7 @@ export function ExerciseStatisticsPage() {
 }
 
 function weight(value: number | undefined) {
-  return value === undefined ? '—' : `${value} kg`
+  return value === undefined ? '—' : `${formatMetric(value)} kg`
 }
 function Metric({ label, value }: { label: string; value: string }) {
   return (
@@ -196,56 +198,6 @@ function Trend({
   )
 }
 
-function TrendChart({ values, unit }: { values: TrendPoint[]; unit: string }) {
-  const [selected, setSelected] = useState(0)
-  const low = Math.min(...values.map((point) => point.value))
-  const high = Math.max(...values.map((point) => point.value))
-  const range = high - low || 1
-  const coordinates = values.map((point, index) => ({
-    x: values.length === 1 ? 50 : 5 + (90 * index) / (values.length - 1),
-    y: 90 - ((point.value - low) / range) * 80,
-  }))
-  const point = values[selected] ?? values[0]
-  return (
-    <>
-      <div className="trend-chart" aria-label="趋势图">
-        <svg
-          viewBox="0 0 100 100"
-          role="img"
-          aria-label={`${point.date}：${point.value}${unit}`}
-        >
-          <polyline
-            points={coordinates.map((item) => `${item.x},${item.y}`).join(' ')}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          />
-          {coordinates.map((item, index) => (
-            <circle key={index} cx={item.x} cy={item.y} r="3" />
-          ))}
-        </svg>
-        <div className="filter-buttons" aria-label="趋势数据点">
-          {values.map((item, index) => (
-            <button
-              key={`${item.date}-${index}`}
-              className={selected === index ? 'primary-button' : 'quiet-button'}
-              onClick={() => setSelected(index)}
-            >
-              {item.date.slice(5)}
-            </button>
-          ))}
-        </div>
-      </div>
-      <p className="trend-tooltip" role="status">
-        {point.date}：
-        <strong>
-          {point.value}
-          {unit}
-        </strong>
-      </p>
-    </>
-  )
-}
 function FixedLoadTrend({
   statistics,
   fixedLoad,

@@ -16,6 +16,16 @@
   --color-warning-soft: #fff7e8;
   --color-danger: #f04438;
   --color-danger-soft: #fff1f0;
+  /* 统计概览指标卡的四色图标。仅用于图标底（`--soft`）与图标本身，
+     正文、按钮、链接一律沿用上面的主色，避免彩色语义泄漏到其他组件。 */
+  --color-metric-count: #1677ff;
+  --color-metric-count-soft: #eaf3ff;
+  --color-metric-duration: #12b76a;
+  --color-metric-duration-soft: #ecfdf3;
+  --color-metric-month-count: #7a5af8;
+  --color-metric-month-count-soft: #f1ecff;
+  --color-metric-month-duration: #0891b2;
+  --color-metric-month-duration-soft: #e0f5fa;
   color: var(--color-text);
   background: var(--color-bg);
   font-family:
@@ -95,6 +105,21 @@ a {
   font-size: 28px;
   line-height: 1.25;
   letter-spacing: -0.035em;
+}
+/* 一级页面（底部 Tab）的页头：左对齐大标题 + 右侧动作槽。
+   与居中的 .top-bar 分工不同，不要互换。 */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+}
+.page-header__action {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
 }
 .eyebrow {
   margin: 0;
@@ -240,6 +265,28 @@ input:focus,
 select:focus {
   outline: 3px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
   border-color: var(--color-primary);
+}
+/* 轻量胶囊选择器（年份 / 动作）。用原生 <select> 时保留 iOS 滚轮与系统箭头。 */
+.select-pill {
+  width: auto;
+  min-height: 36px;
+  border-radius: 999px;
+  padding: 6px 14px;
+  color: var(--color-text);
+  background: var(--color-surface);
+  font-size: 15px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+button.select-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 200px;
+}
+.select-pill__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .field-hint,
 .exercise-row__main span,
@@ -427,6 +474,48 @@ select:focus {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
+/* 统计概览的四色指标卡。图标只做视觉锚点，语义仍由 label 文字承担。 */
+.metric-card {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 14px;
+  background: var(--color-surface);
+}
+.metric-card__icon {
+  display: inline-grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 10px;
+  color: var(--color-metric-count);
+  background: var(--color-metric-count-soft);
+}
+.metric-card--year-duration .metric-card__icon {
+  color: var(--color-metric-duration);
+  background: var(--color-metric-duration-soft);
+}
+.metric-card--month-count .metric-card__icon {
+  color: var(--color-metric-month-count);
+  background: var(--color-metric-month-count-soft);
+}
+.metric-card--month-duration .metric-card__icon {
+  color: var(--color-metric-month-duration);
+  background: var(--color-metric-month-duration-soft);
+}
+.metric-card__label {
+  color: var(--color-tertiary);
+  font-size: 13px;
+}
+.metric-card__value {
+  color: var(--color-text);
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
 .summary-card {
   display: grid;
   gap: 4px;
@@ -468,6 +557,14 @@ select:focus {
   margin-bottom: 4px;
   color: var(--color-tertiary);
   font-size: 10px;
+}
+.heatmap-months__spacer {
+  grid-column: 1;
+}
+/* 11px 的列宽装不下「1月」，所以标签在 JSX 里横跨 4 周并禁止折行。 */
+.heatmap-months__label {
+  white-space: nowrap;
+  line-height: 12px;
 }
 .heatmap-grid {
   display: grid;
@@ -520,6 +617,12 @@ select:focus {
   display: grid;
   gap: 12px;
 }
+.trend-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
 .trend-chart svg {
   width: 100%;
   height: 128px;
@@ -529,6 +632,39 @@ select:focus {
 }
 .trend-chart circle {
   fill: var(--color-primary);
+}
+/* compact：没有下方的日期按钮列表，改由折线圆点自身承担点选。
+   固定高度会让正方形 viewBox 被 preserveAspectRatio 居中，左右各留一大块空白；
+   用 aspect-ratio 让 SVG 与 viewBox 同比例，折线才铺满卡片。 */
+.trend-chart--compact svg {
+  height: auto;
+  aspect-ratio: 100 / 33;
+}
+.trend-chart--compact circle {
+  cursor: pointer;
+  fill-opacity: 0.45;
+}
+.trend-chart--compact circle.trend-point--active {
+  fill-opacity: 1;
+}
+.picker-row {
+  display: grid;
+  width: 100%;
+  gap: 3px;
+  border-top: 1px solid var(--color-divider);
+  border-radius: 0;
+  padding: 12px 0;
+  color: var(--color-text);
+  background: transparent;
+  font-weight: 400;
+  text-align: left;
+}
+.exercise-list li:first-child > .picker-row {
+  border-top: 0;
+}
+.picker-row span {
+  color: var(--color-tertiary);
+  font-size: 14px;
 }
 .trend-tooltip {
   margin: 0;

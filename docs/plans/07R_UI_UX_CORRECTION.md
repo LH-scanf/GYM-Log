@@ -282,10 +282,22 @@ Active Workout 必须成为独立沉浸式编辑 flow。
 
 #### Overview
 
-- [ ] 4 个 Metric Card 紧凑展示；
-- [ ] Label 使用“今年训练次数 / 今年训练时长 / 本月训练次数 / 本月训练时长”；
-- [ ] 不用 `2026-09 训练次数` 这种开发态标签作为主视觉；
-- [ ] 页面标题与参考图层级一致。
+- [x] 4 个 Metric Card 紧凑展示（`.metric-card`，2×2，390px 不降级成单列）；
+- [x] 四色图标成对取用 `--color-metric-*`（见 `DESIGN_SYSTEM.md §2 / §9`）；
+- [x] Label 使用“今年训练次数 / 今年训练时长 / 本月训练次数 / 本月训练时长”；
+- [x] 不用 `2026-09 训练次数` 这种开发态标签作为主视觉；
+- [x] 页头改为左对齐 28px 大标题 + 右侧年份胶囊（`.page-header`，不再用 `.top-bar`）；
+- [x] 删除 `从本地训练记录实时计算` eyebrow（违反 `DESIGN_SYSTEM §1.1`）。
+
+#### Trend（新增）
+
+- [x] 概览与热力图之间新增「趋势」卡；
+- [x] 默认动作 = 训练场次最多的动作（`StatisticsService.mostTrainedExerciseId`，同场次按 id 稳定排序）；
+- [x] 卡内胶囊弹出 Sheet 换动作，Sheet 支持按名称筛选；
+- [x] 普通负重给「估算 1RM / 最高重量」两个口径互切，其余 loadMode 退化为单口径
+      （辅助 → 最小辅助；有氧 → 训练时长；纯次数 → 最佳次数）；
+- [x] 折线逻辑从 `exercise-statistics-page` 抽到 `features/statistics/trend-chart.tsx` 复用；
+- 不采用参考图里写死动作的「卧推趋势」，也不做「最近进步」（无正式算法，见 §9 Out of Scope）。
 
 #### Heatmap
 
@@ -300,29 +312,32 @@ Active Workout 必须成为独立沉浸式编辑 flow。
 
 硬约束：
 
-- [ ] 7 rows × 52/53 week columns；
-- [ ] Cell 是 contribution square，不显示每个日期数字；
-- [ ] 顶部有月份标签；
-- [ ] 左侧可有星期标签；
-- [ ] Heatmap 内容高度目标约 120–180px；
-- [ ] 整个 Heatmap Card 高度不得因 365 天增长为几十屏；
-- [ ] 窄屏可在 Card 内横向滚动；
-- [ ] 禁止让整个页面发生横向滚动；
-- [ ] active / inactive 使用设计 token；
-- [ ] 点击/触摸 active cell 可查看当天 Session。
+- [x] 7 rows × 52/53 week columns；
+- [x] Cell 是 contribution square，不显示每个日期数字；
+- [x] 顶部有月份标签；
+- [x] 月份标签不得折行（11px 列宽装不下「1月」，标签横跨 4 周）；
+- [x] 左侧可有星期标签；
+- [x] Heatmap 内容高度目标约 120–180px；
+- [x] 整个 Heatmap Card 高度不得因 365 天增长为几十屏；
+- [x] 窄屏可在 Card 内横向滚动；
+- [x] 禁止让整个页面发生横向滚动；
+- [x] active / inactive 使用设计 token；
+- [x] 点击/触摸 active cell 可查看当天 Session；
+- [x] 删除 `有训练的日期已高亮。点击日期查看当日训练。`（违反 `DESIGN_SYSTEM §1.1`）。
 
 ### 07R-H — Settings Simplification
 
 功能不变，信息密度重构：
 
-- [ ] `设置` 页保留清晰标题；
-- [ ] Backup / Restore 两个简洁 section/card；
-- [ ] 把长说明压缩成 1–2 行 secondary text；
-- [ ] “最近备份”作为弱状态文本；
-- [ ] Primary action 不要宽大到像营销落地页 CTA；
-- [ ] Import 仍明确 replace-all 风险；
-- [ ] 导入摘要仅在选文件后展开；
-- [ ] 不改变 Plan 06 语义。
+- [x] `设置` 页改为左对齐 28px 大标题（`.page-header`），不再用居中 `.top-bar`；
+- [x] Backup / Restore 两个简洁 section/card；
+- [x] 把长说明压缩成 1–2 行 secondary text（`本地数据建议定期导出为 JSON 备份。` → `本地数据建议定期导出。`）；
+- [x] 删除 `本地数据与备份` eyebrow（与新页头叠加，违反 `DESIGN_SYSTEM §1.1`）；
+- [x] “最近备份”作为弱状态文本；
+- [x] Primary action 不要宽大到像营销落地页 CTA；
+- [x] Import 仍明确 replace-all 风险；
+- [x] 导入摘要仅在选文件后展开；
+- [x] 不改变 Plan 06 语义。
 
 ### 07R-I — Global Shell / Density Audit
 
@@ -435,8 +450,8 @@ READY_FOR_VISUAL_REVIEW
 - [x] 07R-D Exercise Picker
 - [x] 07R-E Previous Performance
 - [ ] 07R-F Exercises Home
-- [ ] 07R-G Statistics
-- [ ] 07R-H Settings
+- [x] 07R-G Statistics
+- [x] 07R-H Settings
 - [ ] 07R-I Global Shell / Density
 
 ### Automated
@@ -467,13 +482,21 @@ READY_FOR_VISUAL_REVIEW
 
 2026-09-16
 07R-A / 07R-C                  ——> 密度修正完成，已 Commit / Push / 部署，等待真机验收
-新建训练 Sheet                 ——> 字段布局改为 390 下两列短字段，已 Commit / Push / 部署，等待真机验收
-07R-F / 07R-G / 07R-H / 07R-I  ——> 未完成，本轮未触碰
+新建训练 Sheet                 ——> 390 下两列短字段：已 Commit / Push / 部署，真机验收通过
+07R-G Statistics               ——> 重构完成（左对齐页头 / 四色指标卡 / 新增趋势卡 / 热力图月份刻度）：待真机验收
+07R-H Settings                 ——> 左对齐页头 + 文案压缩完成：待真机验收
+07R-F / 07R-I                  ——> 未完成，本轮未触碰
 ```
 
-- 已人工确认的页面：**Active Workout / 训练记录页**（其 Record Row 密度修正待真机验收）。
+- 已人工确认的页面：**Active Workout / 训练记录页**（其 Record Row 密度修正待真机验收）、
+  **New Workout Sheet 字段布局**（2026-09-16 真机验收通过，已冻结）。
 - 07R-A 附带全局 UI 文案原则：`DESIGN_SYSTEM.md §1.1 Copy`（去除非必要提示词）。
-- 07R 整体状态仍为 `READY_FOR_VISUAL_REVIEW`，**未 PASS**。
+- 07R-G / 07R-H 新增可复用件：`PageHeader`（一级页左对齐大标题）、`Select Pill`（胶囊）、
+  `.metric-card`（四色指标卡）、`features/statistics/trend-chart.tsx`（趋势折线，`compact` 变体）；
+  页面契约见 `UI_ACCEPTANCE.md §6 / §7`。
+- 07R-G 趋势卡的默认动作由 `StatisticsService.mostTrainedExerciseId()` 决定：按 exercise block
+  出现次数取最多，同次数按 id 排序 —— 不依赖 Map 插入顺序，结果可复现（有单测锁定）。
+- 07R 整体状态仍为 `READY_FOR_VISUAL_REVIEW`，**未 PASS**（F / I 未完成）。
 - 本轮起改用真机验收流程：`UI_ACCEPTANCE.md §8.1`；
   页面只有收到 `REAL_DEVICE_VISUAL_PASS` 才算冻结（`§8.2`）。
 - 验收 viewport 约定（后续所有页面沿用）：

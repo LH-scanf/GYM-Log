@@ -103,6 +103,10 @@ export class WorkoutRepository {
     return this.database.workoutSessions.toArray()
   }
 
+  async listAllBlocks(): Promise<ExerciseBlock[]> {
+    return this.database.exerciseBlocks.toArray()
+  }
+
   async moveExerciseBlock(id: string, direction: -1 | 1): Promise<void> {
     const block = assertFound(
       await this.database.exerciseBlocks.get(id),

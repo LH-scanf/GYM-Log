@@ -79,6 +79,16 @@ GymLog 是自用、高频工具，不是营销页面，也不是教学页面。
 
 --color-danger: #f04438;
 --color-danger-soft: #fff1f0;
+
+/* 统计概览四色图标。只允许出现在指标卡的图标底与图标本身。 */
+--color-metric-count: #1677ff;
+--color-metric-count-soft: #eaf3ff;
+--color-metric-duration: #12b76a;
+--color-metric-duration-soft: #ecfdf3;
+--color-metric-month-count: #7a5af8;
+--color-metric-month-count-soft: #f1ecff;
+--color-metric-month-duration: #0891b2;
+--color-metric-month-duration-soft: #e0f5fa;
 ```
 
 语义：
@@ -87,6 +97,8 @@ GymLog 是自用、高频工具，不是营销页面，也不是教学页面。
 - Success：明确正向变化；
 - Warning：未完成训练；
 - Danger：真正删除；
+- Metric 四色：只用于统计页指标卡图标的「图标底 / 图标色」配对，
+  不参与正文、按钮、链接、状态表达。同一张卡片的图标底与图标色必须成对取用；
 - 不为每个 Exercise 使用随机颜色。
 
 ## 3. Typography
@@ -258,6 +270,33 @@ Mobile-first：
 - inactive 使用 tertiary；
 - safe-area bottom。
 
+### Page Header
+
+一级页面（底部 Tab：统计 / 设置）的页头：
+
+- `.page-header`：左对齐 28px 大标题 + 右侧动作槽（可选）；
+- 二级页面（有返回或工具按钮）继续用居中的 `.top-bar`；
+- 两者职责不同，不要互换；一级页面不要再叠加 `.top-bar`。
+
+### Metric Card（统计概览）
+
+```text
+[icon]  今年训练次数
+        24 次
+```
+
+- 2×2 网格，390px 下不做单列降级；
+- 四色图标必须成对取用 `--color-metric-*`（图标色 + 图标底），见 §2；
+- 图标只做视觉锚点，语义由 label 文字承担——不得只靠颜色区分卡片；
+- 数字 24px、`tabular-nums`、`white-space: nowrap`。
+
+### Select Pill
+
+- 轻量胶囊，用于页头年份、趋势卡动作切换；
+- 尽量保留原生 `<select>` 以复用 iOS 滚轮，只做视觉胶囊化；
+- 只承载「当前值 + chevron」，不放解释文字；
+- 文字过长时省略号截断（`.select-pill__label`），不要撑破页头。
+
 ### Compact Field（短字段）
 
 日期、时间这类短值字段的排版：
@@ -376,7 +415,8 @@ Destructive：
 - 未结束 Session 的权威实时 duration；
 - 训练页显式“保存”主按钮；
 - 尚未有正式算法支持的“最近进步”数据；
-- 过度彩色 icon。
+- 满屏彩色 icon。**例外**：统计页概览指标卡允许四个成对的语义色图标
+  （见 §2 Metric 四色），此外不新增彩色图标。
 
 ## 13. Accessibility
 
