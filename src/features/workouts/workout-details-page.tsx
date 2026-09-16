@@ -3,8 +3,10 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { workoutLoggingService } from '../../application/workout-logging-service'
 import type { WorkoutDetail } from '../../data/repositories/workout-repository'
 import { calculateWorkoutDuration } from '../../domain/workout/duration'
-import { formatDuration, formatRecord } from './workout-format'
 import { AppIcon, TopBar } from '../../shared/components/ui'
+import { ExerciseBlockEditor } from './exercise-block-editor'
+import { WorkoutEditor } from './workout-editor'
+import { formatClock, formatCompactDuration } from './workout-format'
 
 export function WorkoutDetailsPage() {
   const { sessionId } = useParams()
@@ -19,6 +21,24 @@ export function WorkoutDetailsPage() {
     const id = setTimeout(() => void load(), 0)
     return () => clearTimeout(id)
   }, [load])
+  const workoutId = sessionId ?? ''
+  async function remove() {
+    if (!window.confirm('删除本次训练及其中全部动作记录？')) return
+    await workoutLoggingService.cancelSession(workoutId)
+    navigate('/', { replace: true })
+  }
+  if (editing) {
+    return (
+      <WorkoutEditor
+        mode="history"
+        onExit={() => {
+          setEditing(false)
+          void load()
+        }}
+        sessionId={workoutId}
+      />
+    )
+  }
   if (!detail)
     return (
       <section className="page">
@@ -29,147 +49,63 @@ export function WorkoutDetailsPage() {
     detail.session.startTime,
     detail.session.endTime,
   )
-  const workoutId = detail.session.id
-  async function remove() {
-    if (!window.confirm('删除本次训练及其中全部动作记录？')) return
-    await workoutLoggingService.cancelSession(workoutId)
-    navigate('/')
-  }
   return (
     <section className="page">
       <TopBar
         backTo={
-          <Link aria-label="返回训练" className="icon-button" to="/">
+          <Link aria-label="返回训练" className="icon-button" replace to="/">
             <AppIcon name="back" />
           </Link>
         }
         title="训练详情"
       />
-      <p className="eyebrow">{detail.session.date}</p>
-      {editing ? (
-        <SessionEditor
-          detail={detail}
-          onDone={() => {
-            setEditing(false)
-            void load()
-          }}
+      <section className="session-header">
+        <div className="session-header__top">
+          <strong className="session-header__date">{detail.session.date}</strong>
+          {detail.session.endTime === undefined && (
+            <span className="session-badge">未完成</span>
+          )}
+        </div>
+        <div className="session-header__grid">
+          <span className="session-field">
+            <span className="session-field__label">开始</span>
+            <strong className="session-field__value">
+              {formatClock(detail.session.startTime)}
+            </strong>
+          </span>
+          <span className="session-field">
+            <span className="session-field__label">结束</span>
+            <strong className="session-field__value">
+              {formatClock(detail.session.endTime)}
+            </strong>
+          </span>
+          <span className="session-field">
+            <span className="session-field__label">已训练</span>
+            <strong
+              className={`session-field__value${
+                duration === undefined ? ' session-field__value--empty' : ''
+              }`}
+            >
+              {formatCompactDuration(duration)}
+            </strong>
+          </span>
+        </div>
+      </section>
+      {detail.blocks.map((item) => (
+        <ExerciseBlockEditor
+          item={item}
+          key={item.block.id}
+          onChanged={() => void load()}
+          readOnly
+          sessionId={workoutId}
         />
-      ) : (
-        <>
-          <p>
-            {detail.session.startTime ?? '--'} – {detail.session.endTime ?? '--'} ·{' '}
-            {formatDuration(duration)}
-          </p>
-          {detail.blocks.map((item, index) => (
-            <section className="exercise-group" key={item.block.id}>
-              <h2>{item.exercise.name}</h2>
-              {item.records.map((record, recordIndex) => (
-                <div className="exercise-row" key={record.id}>
-                  <span>{formatRecord(record, item.exercise)}</span>
-                  <div className="row-actions">
-                    <button
-                      onClick={() =>
-                        void workoutLoggingService.moveRecord(record.id, -1).then(load)
-                      }
-                      disabled={recordIndex === 0}
-                    >
-                      上移
-                    </button>
-                    <button
-                      onClick={() =>
-                        void workoutLoggingService.moveRecord(record.id, 1).then(load)
-                      }
-                      disabled={recordIndex === item.records.length - 1}
-                    >
-                      下移
-                    </button>
-                  </div>
-                </div>
-              ))}
-              <div className="row-actions">
-                <button
-                  onClick={() =>
-                    void workoutLoggingService.moveBlock(item.block.id, -1).then(load)
-                  }
-                  disabled={index === 0}
-                >
-                  动作上移
-                </button>
-                <button
-                  onClick={() =>
-                    void workoutLoggingService.moveBlock(item.block.id, 1).then(load)
-                  }
-                  disabled={index === detail.blocks.length - 1}
-                >
-                  动作下移
-                </button>
-              </div>
-            </section>
-          ))}
-          <button className="primary-button" onClick={() => setEditing(true)}>
-            编辑
-          </button>
-          <button className="danger-button" onClick={() => void remove()}>
-            删除本次训练
-          </button>
-        </>
-      )}
-    </section>
-  )
-}
-
-function SessionEditor({
-  detail,
-  onDone,
-}: {
-  detail: WorkoutDetail
-  onDone: () => void
-}) {
-  const [date, setDate] = useState(detail.session.date)
-  const [startTime, setStartTime] = useState(detail.session.startTime ?? '')
-  const [endTime, setEndTime] = useState(detail.session.endTime ?? '')
-  const [error, setError] = useState<string>()
-  async function save() {
-    try {
-      await workoutLoggingService.finishSession(detail.session.id, {
-        date,
-        ...(startTime === '' ? {} : { startTime }),
-        ...(endTime === '' ? {} : { endTime }),
-      })
-      onDone()
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : '无法保存。')
-    }
-  }
-  return (
-    <section className="family-management">
-      <label>
-        日期
-        <input
-          type="date"
-          value={date}
-          onChange={(event) => setDate(event.target.value)}
-        />
-      </label>
-      <label>
-        开始时间
-        <input
-          type="time"
-          value={startTime}
-          onChange={(event) => setStartTime(event.target.value)}
-        />
-      </label>
-      <label>
-        结束时间
-        <input
-          type="time"
-          value={endTime}
-          onChange={(event) => setEndTime(event.target.value)}
-        />
-      </label>
-      {error && <p className="form-error">{error}</p>}
-      <button className="primary-button" onClick={() => void save()}>
-        保存编辑
+      ))}
+      {detail.blocks.length === 0 && <p className="workout-hint">这次训练没有动作。</p>}
+      <button className="primary-button" onClick={() => setEditing(true)} type="button">
+        编辑
+      </button>
+      <button className="danger-button" onClick={() => void remove()} type="button">
+        删除本次训练
       </button>
     </section>
   )

@@ -18,6 +18,12 @@ export function BottomNavigation() {
           }
           end={end}
           key={to}
+          /* Tabs replace instead of push: switching tabs is lateral, not a
+             drill-down, so it must not pile up history entries. Otherwise the
+             iOS edge swipe walks back through every tab the user visited.
+             Secondary pages (workout detail, exercise detail, …) keep pushing
+             so a swipe back returns to the tab that opened them. */
+          replace
           to={to}
         >
           <AppIcon name={icon} />

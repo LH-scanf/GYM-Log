@@ -223,6 +223,11 @@ a {
 input,
 select {
   width: 100%;
+  /* Form controls have a large intrinsic (min-content) width — a date/time
+     input cannot shrink below the width of its own UI. Inside grid/flex parents
+     that intrinsic width becomes the parent's automatic minimum size, which
+     pushes sheets wider than the viewport on iOS. Allow them to shrink. */
+  min-width: 0;
   min-height: 44px;
   border: 1px solid var(--color-border);
   border-radius: 10px;
@@ -661,7 +666,7 @@ select:focus {
 }
 .create-workout-fields {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 .session-header {
@@ -700,6 +705,10 @@ select:focus {
   line-height: 20px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.session-header__date-input {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 .session-badge {
   flex: 0 0 auto;
@@ -811,22 +820,37 @@ select:focus {
   gap: 0;
   margin: 0;
 }
+/* A row plus its inline validation warning. Keeping the warning inside the
+   group means the row pitch stays constant when a warning appears. */
+.record-row-group {
+  display: grid;
+  gap: 0;
+  min-width: 0;
+}
 .record-row,
 .exercise-card__table-head {
   display: grid;
-  grid-template-columns: 20px minmax(0, 1fr) 46px minmax(0, 1fr) 44px;
+  /* The column template follows the exercise schema and is published by the
+     component, so cardio and strength rows share one grid definition. */
+  grid-template-columns: var(
+    --record-columns,
+    20px minmax(0, 1fr) 46px minmax(0, 1fr) 44px
+  );
   align-items: center;
   gap: 4px;
+  min-width: 0;
 }
-.record-row--cardio,
-.exercise-card__table-head--cardio {
-  grid-template-columns: 20px repeat(3, minmax(0, 1fr)) 44px;
+.record-row--cardio {
+  --record-value-width: 3.2ch;
 }
 .record-row {
   min-height: 45px;
 }
-.record-row--cardio {
-  --record-value-width: 3.2ch;
+.record-empty {
+  margin: 0;
+  padding: 10px 0;
+  color: var(--color-tertiary);
+  font-size: 14px;
 }
 .exercise-card__table-head {
   margin: 4px -8px 2px;
@@ -857,11 +881,29 @@ select:focus {
 .record-row--cardio .record-field {
   padding: 0 6px;
 }
+/* Read-only rendering of a record row (historical detail). Same grid and
+   metrics as the editable row, minus the control chrome. */
+.record-field--static {
+  border-color: transparent;
+  background: transparent;
+}
+.record-field__value {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: 17px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .record-field:focus-within {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgb(22 119 255 / 18%);
 }
-.record-row__input {
+.record-row__input,
+.record-row__select {
   width: var(--record-value-width, 5ch);
   min-width: 0;
   min-height: 0;
@@ -876,7 +918,15 @@ select:focus {
   line-height: 20px;
   text-align: right;
 }
-.record-row__input:focus {
+.record-row__select {
+  flex: 1 1 auto;
+  width: auto;
+  appearance: none;
+  text-align: center;
+  text-align-last: center;
+}
+.record-row__input:focus,
+.record-row__select:focus {
   outline: none;
   border-color: transparent;
 }
@@ -1002,7 +1052,14 @@ select:focus {
   background: rgb(16 24 40 / 38%);
 }
 .sheet {
+  /* The sheet is a flex item of .sheet-backdrop. Without min-width: 0 its
+     automatic minimum size is its min-content width, so any wide child (a date
+     input, a long label) makes the whole sheet wider than the viewport and the
+     user can pan it sideways. Cap it at the viewport and let the padding box
+     absorb the rest. */
   width: min(100%, 640px);
+  max-width: 100%;
+  min-width: 0;
   max-height: min(82vh, 700px);
   overflow: auto;
   border-radius: 20px 20px 0 0;
@@ -1029,7 +1086,14 @@ select:focus {
 }
 .sheet__content {
   display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
+}
+/* Labels are grid items too: without min-width: 0 they refuse to shrink below
+   the min-content width of the input they wrap. */
+.sheet label {
+  min-width: 0;
 }
 .bottom-navigation {
   position: fixed;
@@ -1121,7 +1185,7 @@ a:focus-visible {
     width: 100%;
   }
   .create-workout-fields {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 @media (min-width: 768px) {
