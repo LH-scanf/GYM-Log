@@ -44,33 +44,6 @@ export function StatisticsPage() {
   const matchedExercises = exercises.filter((exercise) =>
     exercise.name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()),
   )
-  const heatmapDays = [...days].sort((left, right) => {
-    const leftDate = new Date(`${left.date}T00:00:00Z`)
-    const rightDate = new Date(`${right.date}T00:00:00Z`)
-    const leftWeek = Math.floor(
-      (Date.UTC(
-        leftDate.getUTCFullYear(),
-        leftDate.getUTCMonth(),
-        leftDate.getUTCDate(),
-      ) -
-        Date.UTC(leftDate.getUTCFullYear(), 0, 1) +
-        new Date(`${leftDate.getUTCFullYear()}-01-01T00:00:00Z`).getUTCDay() *
-          86_400_000) /
-        (7 * 86_400_000),
-    )
-    const rightWeek = Math.floor(
-      (Date.UTC(
-        rightDate.getUTCFullYear(),
-        rightDate.getUTCMonth(),
-        rightDate.getUTCDate(),
-      ) -
-        Date.UTC(rightDate.getUTCFullYear(), 0, 1) +
-        new Date(`${rightDate.getUTCFullYear()}-01-01T00:00:00Z`).getUTCDay() *
-          86_400_000) /
-        (7 * 86_400_000),
-    )
-    return leftDate.getUTCDay() - rightDate.getUTCDay() || leftWeek - rightWeek
-  })
   async function selectDay(date: string) {
     setSelectedDate(date)
     setSessions(await statisticsService.sessionsOn(date))
@@ -117,21 +90,6 @@ export function StatisticsPage() {
           </select>
         </div>
         <p className="field-hint">有训练的日期已高亮。点击日期查看当日训练。</p>
-        {days.some((day) => day.active) && (
-          <div className="active-day-list" aria-label="有训练的日期">
-            {days
-              .filter((day) => day.active)
-              .map((day) => (
-                <button
-                  key={day.date}
-                  className="quiet-button"
-                  onClick={() => void selectDay(day.date)}
-                >
-                  {day.date} · {day.count} 次
-                </button>
-              ))}
-          </div>
-        )}
         {selectedDate && (
           <section className="exercise-group" aria-live="polite">
             <h3>{selectedDate} 的训练</h3>
@@ -151,17 +109,7 @@ export function StatisticsPage() {
             )}
           </section>
         )}
-        <div className="heatmap" aria-label={`${year} 年训练日历`}>
-          {heatmapDays.map((day) => (
-            <div
-              key={day.date}
-              className={day.active ? 'heatmap-day heatmap-day--active' : 'heatmap-day'}
-              aria-label={`${day.date}${day.active ? `，${day.count} 次训练` : '，无训练'}`}
-            >
-              {day.date.slice(-2)}
-            </div>
-          ))}
-        </div>
+        <ContributionHeatmap days={days} onSelect={selectDay} year={year} />
       </section>
       <section className="statistics-section">
         <h2>动作统计</h2>
@@ -192,6 +140,72 @@ export function StatisticsPage() {
         )}
       </section>
     </section>
+  )
+}
+
+function ContributionHeatmap({
+  days,
+  year,
+  onSelect,
+}: {
+  days: HeatmapDay[]
+  year: number
+  onSelect: (date: string) => Promise<void>
+}) {
+  const byDate = new Map(days.map((day) => [day.date, day]))
+  const start = new Date(Date.UTC(year, 0, 1))
+  start.setUTCDate(start.getUTCDate() - start.getUTCDay())
+  const cells = Array.from({ length: 53 * 7 }, (_, index) => {
+    const date = new Date(start)
+    date.setUTCDate(start.getUTCDate() + index)
+    const key = date.toISOString().slice(0, 10)
+    return { date: key, day: byDate.get(key), inYear: date.getUTCFullYear() === year }
+  })
+  const months = Array.from({ length: 53 }, (_, week) => {
+    const date = new Date(start)
+    date.setUTCDate(start.getUTCDate() + week * 7)
+    return date.getUTCDate() <= 7 && date.getUTCFullYear() === year
+      ? `${date.getUTCMonth() + 1}月`
+      : ''
+  })
+  const weekdays = ['日', '一', '二', '三', '四', '五', '六']
+  return (
+    <div className="heatmap" aria-label={`${year} 年训练日历`}>
+      <div className="heatmap-months">
+        <span />
+        {months.map((month, index) => (
+          <span key={index}>{month}</span>
+        ))}
+      </div>
+      <div aria-label="有训练的日期" className="heatmap-grid">
+        {weekdays.map((name, weekday) => (
+          <>
+            <span className="heatmap-weekday" key={name}>
+              {weekday % 2 === 1 ? name : ''}
+            </span>
+            {Array.from({ length: 53 }, (_, week) => {
+              const cell = cells[week * 7 + weekday]
+              const active = cell.day?.active === true
+              return active ? (
+                <button
+                  aria-label={`${cell.date} · ${cell.day?.count} 次`}
+                  className="heatmap-day heatmap-day--active"
+                  key={cell.date}
+                  onClick={() => void onSelect(cell.date)}
+                  type="button"
+                />
+              ) : (
+                <span
+                  aria-label={`${cell.date}，无训练`}
+                  className="heatmap-day"
+                  key={cell.date}
+                />
+              )
+            })}
+          </>
+        ))}
+      </div>
+    </div>
   )
 }
 

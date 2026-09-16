@@ -5,14 +5,7 @@ import { workoutLoggingService } from '../../application/workout-logging-service
 import { AppIcon, EmptyState, Sheet } from '../../shared/components/ui'
 import { formatRecord } from './workout-format'
 
-const numericFields = [
-  'load',
-  'reps',
-  'duration',
-  'distance',
-  'speed',
-  'incline',
-] as const
+const fields = ['load', 'reps', 'duration', 'distance', 'speed', 'incline'] as const
 const labels = {
   load: '重量',
   reps: '次数',
@@ -24,12 +17,12 @@ const labels = {
 const units = {
   load: 'kg',
   reps: '次',
-  duration: '分钟',
+  duration: 'min',
   distance: 'km',
   speed: 'km/h',
   incline: '%',
 }
-
+type Field = (typeof fields)[number]
 type Props = {
   item: WorkoutDetail['blocks'][number]
   sessionId: string
@@ -37,23 +30,34 @@ type Props = {
 }
 
 export function ExerciseBlockEditor({ item, sessionId, onChanged }: Props) {
-  const [draft, setDraft] = useState<ExerciseRecordValues>({})
   const [message, setMessage] = useState<string>()
   const [previous, setPrevious] =
     useState<Awaited<ReturnType<typeof workoutLoggingService.previousPerformance>>>()
   const [previousOpen, setPreviousOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const cardio =
     item.exercise.recordSchema.duration !== 'DISABLED' &&
     item.exercise.recordSchema.reps === 'DISABLED'
-  const save = async (values: ExerciseRecordValues) => {
+  const activeFields = fields.filter(
+    (field) => item.exercise.recordSchema[field] !== 'DISABLED',
+  )
+  const createNext = async () => {
     try {
-      await workoutLoggingService.addRecord(item.block.id, values)
-      setDraft({})
-      setMessage(undefined)
+      const latest = item.records.at(-1)
+      if (!latest) {
+        setMessage('先填写这一组所需字段。')
+        return
+      }
+      await workoutLoggingService.addRecord(item.block.id, toValues(latest))
       onChanged()
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : '记录未保存。')
+      setMessage(error instanceof Error ? error.message : '无法添加记录。')
     }
+  }
+  const removeBlock = async () => {
+    if (!window.confirm(`删除动作“${item.exercise.name}”及其当前记录？`)) return
+    await workoutLoggingService.removeBlock(item.block.id)
+    onChanged()
   }
   const showPrevious = async () => {
     setPrevious(
@@ -61,116 +65,83 @@ export function ExerciseBlockEditor({ item, sessionId, onChanged }: Props) {
     )
     setPreviousOpen(true)
   }
-  const removeBlock = async () => {
-    if (!window.confirm(`删除动作“${item.exercise.name}”及其当前记录？`)) return
-    await workoutLoggingService.removeBlock(item.block.id)
-    onChanged()
-  }
   return (
     <section className="exercise-group">
       <div className="exercise-card__header">
         <h2>{item.exercise.name}</h2>
-        <div className="row-actions">
+        <div className="exercise-card__more">
           <button
-            className="quiet-button"
+            className="exercise-card__previous"
             onClick={() => void showPrevious()}
             type="button"
           >
-            上次
+            上次 &gt;
           </button>
-          <button
-            aria-label={`删除动作 ${item.exercise.name}`}
-            className="icon-button danger-button"
-            onClick={() => void removeBlock()}
-            type="button"
-          >
-            <AppIcon name="delete" />
-          </button>
-        </div>
-      </div>
-      {item.records.length > 0 && (
-        <div className="record-list">
-          {item.records.map((record, index) => (
-            <RecordRow
-              exercise={item.exercise}
-              index={index}
-              key={record.id}
-              record={record}
-              onChanged={onChanged}
-            />
-          ))}
-        </div>
-      )}
-      <div className="record-composer">
-        {numericFields
-          .filter((field) => item.exercise.recordSchema[field] !== 'DISABLED')
-          .map((field) => {
-            const label =
-              field === 'load' && item.exercise.loadMode === 'ASSISTANCE'
-                ? '辅助重量'
-                : labels[field]
-            const placeholder =
-              field === 'load' && item.exercise.loadMode === 'BODYWEIGHT_PLUS'
-                ? '自重（留空）'
-                : undefined
-            return (
-              <label key={field}>
-                {label} <span className="field-hint">{units[field]}</span>
-                <input
-                  inputMode="decimal"
-                  onChange={(event) =>
-                    setDraft({
-                      ...draft,
-                      [field]:
-                        event.target.value === ''
-                          ? undefined
-                          : Number(event.target.value),
-                    })
-                  }
-                  placeholder={placeholder}
-                  type="number"
-                  value={draft[field] ?? ''}
-                />
-              </label>
-            )
-          })}
-        {item.exercise.recordSchema.side !== 'DISABLED' && (
-          <label>
-            侧别
-            <select
-              onChange={(event) =>
-                setDraft({
-                  ...draft,
-                  side:
-                    event.target.value === ''
-                      ? undefined
-                      : (event.target.value as ExerciseRecordValues['side']),
-                })
-              }
-              value={draft.side ?? ''}
+          <div className="workout-overflow">
+            <button
+              aria-label={`更多 ${item.exercise.name} 操作`}
+              className="icon-button"
+              onClick={() => setMenuOpen((open) => !open)}
+              type="button"
             >
-              <option value="">未选择</option>
-              <option value="LEFT">左</option>
-              <option value="RIGHT">右</option>
-              <option value="BOTH">双侧</option>
-            </select>
-          </label>
+              <AppIcon name="more" />
+            </button>
+            {menuOpen && (
+              <div className="workout-overflow__menu">
+                <button
+                  className="danger-button"
+                  onClick={() => void removeBlock()}
+                  type="button"
+                >
+                  删除动作
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+      <div
+        className={`exercise-card__table-head${cardio ? ' exercise-card__table-head--cardio' : ''}`}
+      >
+        <span>#</span>
+        {cardio ? (
+          activeFields.map((field) => <span key={field}>{labels[field]}</span>)
+        ) : (
+          <>
+            <span>{item.exercise.loadMode === 'ASSISTANCE' ? '辅助重量' : '重量'}</span>
+            <span>×</span>
+            <span>次数</span>
+          </>
+        )}
+        <span />
+      </div>
+      <div className="record-list">
+        {item.records.map((record, index) => (
+          <EditableRecordRow
+            activeFields={activeFields}
+            exercise={item.exercise}
+            index={index}
+            key={record.id}
+            onChanged={onChanged}
+            record={record}
+          />
+        ))}
+        {item.records.length === 0 && (
+          <DraftRecordRow
+            activeFields={activeFields}
+            exercise={item.exercise}
+            onChanged={onChanged}
+            blockId={item.block.id}
+          />
         )}
       </div>
-      <div className="record-actions">
-        <button className="primary-button" onClick={() => void save(draft)} type="button">
-          {cardio ? '添加一段' : '添加一组'}
-        </button>
-        {item.records.length > 0 && (
-          <button
-            className="quiet-button"
-            onClick={() => void save(copy(item.records.at(-1)!))}
-            type="button"
-          >
-            复制上一条
-          </button>
-        )}
-      </div>
+      <button
+        className="quiet-button exercise-card__add"
+        onClick={() => void createNext()}
+        type="button"
+      >
+        + {cardio ? '添加一段' : '添加一组'}
+      </button>
       {message && (
         <p className="form-warning" role="status">
           {message}
@@ -180,23 +151,15 @@ export function ExerciseBlockEditor({ item, sessionId, onChanged }: Props) {
         <Sheet onClose={() => setPreviousOpen(false)} title="上次训练表现">
           <div className="sheet__content">
             {previous === undefined ? (
-              <EmptyState
-                description="完成一次该动作训练后，会在这里显示上次记录。"
-                title="此前没有该动作记录"
-              />
+              <EmptyState title="此前没有该动作记录" />
             ) : (
               <>
                 <p className="field-hint">{previous.session.date}</p>
-                <div className="record-list">
-                  {previous.records.map((record, index) => (
-                    <div className="record-row" key={record.id}>
-                      <span className="record-row__index">{index + 1}</span>
-                      <span className="record-row__value">
-                        {formatRecord(record, item.exercise)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                {previous.records.map((record, index) => (
+                  <p key={record.id}>
+                    {index + 1}. {formatRecord(record, item.exercise)}
+                  </p>
+                ))}
               </>
             )}
           </div>
@@ -206,24 +169,49 @@ export function ExerciseBlockEditor({ item, sessionId, onChanged }: Props) {
   )
 }
 
-function RecordRow({
-  exercise,
-  index,
+function EditableRecordRow({
   record,
+  index,
+  exercise,
+  activeFields,
   onChanged,
 }: {
-  exercise: WorkoutDetail['blocks'][number]['exercise']
-  index: number
   record: ExerciseRecord
+  index: number
+  exercise: WorkoutDetail['blocks'][number]['exercise']
+  activeFields: Field[]
   onChanged: () => void
 }) {
+  const [values, setValues] = useState<ExerciseRecordValues>(toValues(record))
+  const save = async () => {
+    try {
+      await workoutLoggingService.updateRecord(record.id, values)
+      onChanged()
+    } catch {
+      /* validation remains in the row until corrected */
+    }
+  }
+  const cardio =
+    exercise.recordSchema.duration !== 'DISABLED' &&
+    exercise.recordSchema.reps === 'DISABLED'
   return (
-    <div className="record-row">
+    <div className={`record-row${cardio ? ' record-row--cardio' : ''}`}>
       <span className="record-row__index">{index + 1}</span>
-      <span className="record-row__value">{formatRecord(record, exercise)}</span>
+      {activeFields.map((field, fieldIndex) => (
+        <>
+          <RecordInput
+            field={field}
+            key={field}
+            onBlur={() => void save()}
+            onChange={(value) => setValues({ ...values, [field]: value })}
+            value={values[field]}
+          />
+          {!cardio && fieldIndex === 0 && <span className="record-times">×</span>}
+        </>
+      ))}
       <button
         aria-label={`删除第 ${index + 1} 条记录`}
-        className="icon-button danger-button"
+        className="icon-button record-delete"
         onClick={() => void workoutLoggingService.removeRecord(record.id).then(onChanged)}
         type="button"
       >
@@ -233,7 +221,89 @@ function RecordRow({
   )
 }
 
-function copy(record: ExerciseRecord): ExerciseRecordValues {
+function DraftRecordRow({
+  blockId,
+  exercise,
+  activeFields,
+  onChanged,
+}: {
+  blockId: string
+  exercise: WorkoutDetail['blocks'][number]['exercise']
+  activeFields: Field[]
+  onChanged: () => void
+}) {
+  const [values, setValues] = useState<ExerciseRecordValues>({})
+  const [error, setError] = useState<string>()
+  const cardio =
+    exercise.recordSchema.duration !== 'DISABLED' &&
+    exercise.recordSchema.reps === 'DISABLED'
+  const save = async () => {
+    try {
+      await workoutLoggingService.addRecord(blockId, values)
+      onChanged()
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : '请填写这一组。')
+    }
+  }
+  return (
+    <>
+      <div className={`record-row${cardio ? ' record-row--cardio' : ''}`}>
+        <span className="record-row__index">1</span>
+        {activeFields.map((field, fieldIndex) => (
+          <>
+            <RecordInput
+              field={field}
+              key={field}
+              onChange={(value) => setValues({ ...values, [field]: value })}
+              value={values[field]}
+            />
+            {!cardio && fieldIndex === 0 && <span className="record-times">×</span>}
+          </>
+        ))}
+        <span />
+      </div>
+      <button
+        className="quiet-button exercise-card__add"
+        onClick={() => void save()}
+        type="button"
+      >
+        保存这一组
+      </button>
+      {error && <p className="form-warning">{error}</p>}
+    </>
+  )
+}
+
+function RecordInput({
+  field,
+  value,
+  onChange,
+  onBlur,
+}: {
+  field: Field
+  value: number | undefined
+  onChange: (value: number | undefined) => void
+  onBlur?: () => void
+}) {
+  return (
+    <span className="record-field">
+      <input
+        aria-label={labels[field]}
+        className="record-row__input"
+        inputMode={field === 'reps' ? 'numeric' : 'decimal'}
+        onBlur={onBlur}
+        onChange={(event) =>
+          onChange(event.target.value === '' ? undefined : Number(event.target.value))
+        }
+        step={field === 'reps' ? 1 : 'any'}
+        type="number"
+        value={value ?? ''}
+      />
+      <span className="record-field__unit">{units[field]}</span>
+    </span>
+  )
+}
+function toValues(record: ExerciseRecord): ExerciseRecordValues {
   return {
     ...(record.load === undefined ? {} : { load: record.load }),
     ...(record.reps === undefined ? {} : { reps: record.reps }),

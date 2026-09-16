@@ -1,6 +1,8 @@
-import { useMemo, useState } from 'react'
-import type { Exercise } from '../../domain/exercise/types'
+import { useEffect, useMemo, useState } from 'react'
+import type { Exercise, ExerciseFamily } from '../../domain/exercise/types'
 import { EmptyState, Sheet } from '../../shared/components/ui'
+import { exerciseManagementService } from '../../application/exercise-management-service'
+import { workoutLoggingService } from '../../application/workout-logging-service'
 
 type ExercisePickerProps = {
   exercises: Exercise[]
@@ -10,6 +12,31 @@ type ExercisePickerProps = {
 
 export function ExercisePicker({ exercises, onClose, onSelect }: ExercisePickerProps) {
   const [query, setQuery] = useState('')
+  const [families, setFamilies] = useState<ExerciseFamily[]>([])
+  const [recentIds, setRecentIds] = useState<string[]>([])
+  useEffect(() => {
+    void Promise.all([
+      exerciseManagementService.listFamilies(),
+      workoutLoggingService.listAllSessions(),
+    ]).then(async ([nextFamilies, sessions]) => {
+      setFamilies(nextFamilies)
+      const details = await Promise.all(
+        sessions
+          .slice()
+          .sort((a, b) => b.date.localeCompare(a.date))
+          .map((session) => workoutLoggingService.getWorkout(session.id)),
+      )
+      setRecentIds(
+        [
+          ...new Set(
+            details.flatMap(
+              (detail) => detail?.blocks.map((block) => block.exercise.id) ?? [],
+            ),
+          ),
+        ].slice(0, 5),
+      )
+    })
+  }, [])
   const matching = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase()
     return exercises.filter((exercise) =>
@@ -36,23 +63,63 @@ export function ExercisePicker({ exercises, onClose, onSelect }: ExercisePickerP
             title="没有可用动作"
           />
         ) : (
-          <div className="exercise-list" aria-label="可选动作">
-            {matching.map((exercise) => (
-              <button
-                className="exercise-row__main"
-                key={exercise.id}
-                onClick={() => onSelect(exercise.id)}
-                type="button"
-              >
-                <strong>{exercise.name}</strong>
-                <span>
-                  {exercise.familyId === undefined ? '未归类动作' : '选择后立即添加'}
-                </span>
-              </button>
+          <div className="sheet__content" aria-label="可选动作">
+            {query === '' && recentIds.length > 0 && (
+              <PickerGroup
+                exercises={matching.filter((exercise) => recentIds.includes(exercise.id))}
+                onSelect={onSelect}
+                title="最近"
+              />
+            )}
+            {[
+              ...new Set(matching.map((exercise) => exercise.familyId ?? 'ungrouped')),
+            ].map((familyId) => (
+              <PickerGroup
+                exercises={matching.filter(
+                  (exercise) => (exercise.familyId ?? 'ungrouped') === familyId,
+                )}
+                key={familyId}
+                onSelect={onSelect}
+                title={
+                  familyId === 'ungrouped'
+                    ? '未分组'
+                    : (families.find((family) => family.id === familyId)?.name ?? '动作')
+                }
+              />
             ))}
           </div>
         )}
       </div>
     </Sheet>
+  )
+}
+
+function PickerGroup({
+  title,
+  exercises,
+  onSelect,
+}: {
+  title: string
+  exercises: Exercise[]
+  onSelect: (id: string) => void
+}) {
+  if (exercises.length === 0) return null
+  return (
+    <section>
+      <p className="eyebrow">{title}</p>
+      <div className="exercise-list">
+        {exercises.map((exercise) => (
+          <button
+            className="exercise-row__main"
+            key={exercise.id}
+            onClick={() => onSelect(exercise.id)}
+            type="button"
+          >
+            <strong>{exercise.name}</strong>
+            <span>选择后立即添加</span>
+          </button>
+        ))}
+      </div>
+    </section>
   )
 }

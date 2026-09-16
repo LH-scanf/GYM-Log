@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { exerciseManagementService } from '../../application/exercise-management-service'
 import type { Exercise, ExerciseFamily } from '../../domain/exercise/types'
 import { getExerciseSummary } from './exercise-summary'
+import { Sheet } from '../../shared/components/ui'
 
 type ExerciseGroup = {
   id: string
@@ -19,6 +20,7 @@ export function ExercisesPage() {
   const [newFamilyName, setNewFamilyName] = useState('')
   const [editingFamilyId, setEditingFamilyId] = useState<string>()
   const [editingFamilyName, setEditingFamilyName] = useState('')
+  const [familyManagerOpen, setFamilyManagerOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string>()
 
@@ -240,76 +242,94 @@ export function ExercisesPage() {
           <Link className="text-link" to="/exercises?view=archived">
             查看已归档动作
           </Link>
-          <section aria-labelledby="family-title" className="family-management">
-            <h2 id="family-title">动作族</h2>
-            <p>动作族只用于组织相关变式，本身不是可记录动作。</p>
-            <form className="inline-form" onSubmit={createFamily}>
-              <label>
-                新建动作族
-                <input
-                  onChange={(event) => setNewFamilyName(event.target.value)}
-                  placeholder="例如：高位下拉"
-                  required
-                  value={newFamilyName}
-                />
-              </label>
-              <button type="submit">新建</button>
-            </form>
-            {hasDuplicateNewFamily ? (
-              <p className="form-warning" role="status">
-                已有同名动作族。允许保存，但请确认不需要使用现有动作族。
-              </p>
-            ) : null}
-            <ul className="family-list">
-              {families.map((family) => (
-                <li key={family.id}>
-                  {editingFamilyId === family.id ? (
-                    <form className="inline-form" onSubmit={saveFamilyName}>
-                      <label>
-                        动作族名称
-                        <input
-                          autoFocus
-                          onChange={(event) => setEditingFamilyName(event.target.value)}
-                          value={editingFamilyName}
-                        />
-                      </label>
-                      <button type="submit">保存</button>
-                      <button onClick={() => setEditingFamilyId(undefined)} type="button">
-                        取消
-                      </button>
-                      {hasDuplicateEditedFamily ? (
-                        <p className="form-warning" role="status">
-                          已有同名动作族。允许保存，但请确认不需要使用现有动作族。
-                        </p>
-                      ) : null}
-                    </form>
-                  ) : (
-                    <div className="family-row">
-                      <span>{family.name}</span>
-                      <div className="row-actions">
-                        <button
-                          onClick={() => {
-                            setEditingFamilyId(family.id)
-                            setEditingFamilyName(family.name)
-                          }}
-                          type="button"
-                        >
-                          改名
-                        </button>
-                        <button
-                          className="danger-button"
-                          onClick={() => void deleteFamily(family)}
-                          type="button"
-                        >
-                          删除
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </section>
+          <div className="row-actions">
+            <button
+              className="quiet-button"
+              onClick={() => setFamilyManagerOpen(true)}
+              type="button"
+            >
+              管理动作族
+            </button>
+          </div>
+          {familyManagerOpen && (
+            <Sheet onClose={() => setFamilyManagerOpen(false)} title="管理动作族">
+              <section aria-labelledby="family-title" className="family-management">
+                <h2 id="family-title">动作族</h2>
+                <p>动作族只用于组织相关变式，本身不是可记录动作。</p>
+                <form className="inline-form" onSubmit={createFamily}>
+                  <label>
+                    新建动作族
+                    <input
+                      onChange={(event) => setNewFamilyName(event.target.value)}
+                      placeholder="例如：高位下拉"
+                      required
+                      value={newFamilyName}
+                    />
+                  </label>
+                  <button type="submit">新建</button>
+                </form>
+                {hasDuplicateNewFamily ? (
+                  <p className="form-warning" role="status">
+                    已有同名动作族。允许保存，但请确认不需要使用现有动作族。
+                  </p>
+                ) : null}
+                <ul className="family-list">
+                  {families.map((family) => (
+                    <li key={family.id}>
+                      {editingFamilyId === family.id ? (
+                        <form className="inline-form" onSubmit={saveFamilyName}>
+                          <label>
+                            动作族名称
+                            <input
+                              autoFocus
+                              onChange={(event) =>
+                                setEditingFamilyName(event.target.value)
+                              }
+                              value={editingFamilyName}
+                            />
+                          </label>
+                          <button type="submit">保存</button>
+                          <button
+                            onClick={() => setEditingFamilyId(undefined)}
+                            type="button"
+                          >
+                            取消
+                          </button>
+                          {hasDuplicateEditedFamily ? (
+                            <p className="form-warning" role="status">
+                              已有同名动作族。允许保存，但请确认不需要使用现有动作族。
+                            </p>
+                          ) : null}
+                        </form>
+                      ) : (
+                        <div className="family-row">
+                          <span>{family.name}</span>
+                          <div className="row-actions">
+                            <button
+                              onClick={() => {
+                                setEditingFamilyId(family.id)
+                                setEditingFamilyName(family.name)
+                              }}
+                              type="button"
+                            >
+                              改名
+                            </button>
+                            <button
+                              className="danger-button"
+                              onClick={() => void deleteFamily(family)}
+                              type="button"
+                            >
+                              删除
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            </Sheet>
+          )}
         </>
       )}
     </section>
@@ -328,9 +348,7 @@ function EmptyState({ archivedView, query }: { archivedView: boolean; query: str
             : '还没有动作。'}
       </p>
       {archivedView || hasQuery ? null : (
-        <Link className="primary-link" to="/exercises/new">
-          创建第一个动作
-        </Link>
+        <p className="field-hint">使用右上角“新建动作”开始。</p>
       )}
     </div>
   )

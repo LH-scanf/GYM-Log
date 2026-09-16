@@ -31,3 +31,35 @@ export function formatDuration(minutes: number | undefined): string {
     ? '未填写结束时间'
     : `${Math.floor(minutes / 60) > 0 ? `${Math.floor(minutes / 60)}h` : ''}${minutes % 60}min`
 }
+
+const weekdays = ['日', '一', '二', '三', '四', '五', '六']
+
+export function weekdayOf(date: string): string {
+  return weekdays[new Date(`${date}T12:00:00`).getDay()] ?? ''
+}
+
+export function formatSessionHeading(date: string | undefined): string {
+  if (date === undefined) return '未设置日期'
+  const matched = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date)
+  if (matched === null) return date
+  return `${Number(matched[2])}月${Number(matched[3])}日 · 周${weekdayOf(date)}`
+}
+
+export function formatSessionDate(date: string | undefined): string {
+  if (date === undefined) return '未设置日期'
+  const matched = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date)
+  if (matched === null) return date
+  const year = Number(matched[1])
+  const prefix = year === new Date().getFullYear() ? '' : `${year}年`
+  return `${prefix}${Number(matched[2])}月${Number(matched[3])}日 周${weekdayOf(date)}`
+}
+
+export function formatClock(time: string | undefined): string {
+  return time === undefined || time === '' ? '--:--' : time
+}
+
+export function formatCompactDuration(minutes: number | undefined): string {
+  if (minutes === undefined) return '—'
+  const hours = Math.floor(minutes / 60)
+  return hours > 0 ? `${hours}h${minutes % 60}min` : `${minutes}min`
+}

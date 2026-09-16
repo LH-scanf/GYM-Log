@@ -10,6 +10,8 @@ type IconName =
   | 'back'
   | 'more'
   | 'delete'
+  | 'chevron'
+  | 'warning'
 
 const paths: Record<IconName, ReactNode> = {
   training: (
@@ -47,6 +49,13 @@ const paths: Record<IconName, ReactNode> = {
   delete: (
     <>
       <path d="M5 7h14M10 11v5m4-5v5M9 7l1-2h4l1 2m-8 0 1 12h8l1-12" />
+    </>
+  ),
+  chevron: <path d="m9 5 7 7-7 7" />,
+  warning: (
+    <>
+      <path d="M12 4.6 3.9 18.6h16.2z" />
+      <path d="M12 10.2v3.6m0 2.6v.4" />
     </>
   ),
 }

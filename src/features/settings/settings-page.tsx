@@ -87,19 +87,16 @@ export function SettingsPage() {
       <TopBar title="设置" />
       <p className="eyebrow">本地数据与备份</p>
       <section className="settings-card">
-        <h2>导出备份</h2>
-        <p>
-          GymLog 数据主要保存在当前设备的
-          IndexedDB。清除站点数据可能造成数据丢失，建议定期导出 JSON 备份。
-        </p>
+        <h2>数据备份</h2>
+        <p>本地数据建议定期导出为 JSON 备份。</p>
         <p className="field-hint">最近备份：{formatDateTime(lastBackupAt)}</p>
         <button className="primary-button" onClick={() => void exportBackup()}>
-          导出 JSON 备份
+          导出 JSON
         </button>
       </section>
       <section className="settings-card">
-        <h2>导入备份</h2>
-        <p>导入会完整替换当前设备上的 GymLog 数据，不会合并。</p>
+        <h2>恢复数据</h2>
+        <p>导入将完整替换本地数据，不会合并。</p>
         <input
           ref={inputRef}
           type="file"
@@ -107,7 +104,9 @@ export function SettingsPage() {
           hidden
           onChange={(event) => void selectFile(event.target.files?.[0])}
         />
-        <button onClick={() => inputRef.current?.click()}>选择 JSON 备份</button>
+        <button className="quiet-button" onClick={() => inputRef.current?.click()}>
+          选择备份
+        </button>
         {summary && (
           <section className="backup-summary" aria-live="polite">
             <h3>导入摘要</h3>
