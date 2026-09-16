@@ -4,4 +4,6 @@ playwright-report/
 test-results/
 coverage/
 docs/
+output/
+.workbuddy/
 package-lock.json

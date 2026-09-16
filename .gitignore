@@ -8,3 +8,9 @@ coverage/
 .env.*
 !.env.example
 *.local
+
+# 本地视觉验收截图（由 e2e 每轮重新生成）
+output/
+
+# 本地 Agent 工作记忆
+.workbuddy/
