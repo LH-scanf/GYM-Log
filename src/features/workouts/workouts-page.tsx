@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { workoutLoggingService } from '../../application/workout-logging-service'
 import type { WorkoutSession } from '../../domain/workout/types'
@@ -6,7 +6,12 @@ import type { WorkoutDetail } from '../../data/repositories/workout-repository'
 import { calculateWorkoutDuration } from '../../domain/workout/duration'
 import { AppIcon, Sheet } from '../../shared/components/ui'
 import { WorkoutEditor } from './workout-editor'
-import { formatClock, formatCompactDuration, formatSessionDate } from './workout-format'
+import {
+  formatClock,
+  formatCompactDate,
+  formatCompactDuration,
+  formatSessionDate,
+} from './workout-format'
 
 function localDate(): string {
   const date = new Date()
@@ -193,28 +198,59 @@ function CreateWorkoutSheet({
     <Sheet onClose={onClose} title="新建训练">
       <form className="sheet__content" onSubmit={onSubmit}>
         <div className="create-workout-fields">
-          <label>
-            日期
+          <CompactField label="日期" value={formatCompactDate(date)}>
             <input
+              className="session-field__input session-field__input--overlay"
               onChange={(event) => onDateChange(event.target.value)}
               required
               type="date"
               value={date}
             />
-          </label>
-          <label>
-            开始时间
+          </CompactField>
+          <CompactField label="开始时间" value={formatClock(startTime)}>
             <input
+              className="session-field__input session-field__input--overlay"
               onChange={(event) => onStartTimeChange(event.target.value)}
               required
               type="time"
               value={startTime}
             />
-          </label>
+          </CompactField>
         </div>
         <button className="primary-button">开始训练</button>
       </form>
     </Sheet>
+  )
+}
+
+/**
+ * 短字段：小标签在上、紧凑值在下。
+ *
+ * 日期 / 开始时间在 390px（iPhone 12 主验收宽度）下也必须是两列，
+ * 而原生 `input[type=date|time]` 的固有宽度塞不进 173px 的轨道，
+ * iOS 还会用本地化长格式（`2026年9月16日`）渲染。
+ * 因此值由应用自己紧凑渲染，控件本体保留为原生输入并铺满整个字段，
+ * 点击仍然由系统原生选择器接管 —— 不引入自定义日期选择器。
+ */
+function CompactField({
+  label,
+  value,
+  children,
+}: {
+  label: string
+  value: string
+  children: ReactNode
+}) {
+  return (
+    <label className="session-field">
+      <span className="session-field__label">{label}</span>
+      <span className="session-field__control">
+        <span aria-hidden="true" className="session-field__value">
+          {value}
+        </span>
+        {children}
+      </span>
+    </label>
   )
 }
 

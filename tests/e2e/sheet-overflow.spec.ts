@@ -7,8 +7,12 @@ import { expect, test, type Page } from '@playwright/test'
  * 让日期/时间输入的固有最小宽度顶宽了轨道。修复方式是逐层 `min-width: 0`
  * + `minmax(0, 1fr)` + `.sheet { max-width: 100% }`，而不是 `overflow-x: hidden`。
  *
- * 这里锁定修复结果，并额外用一个「把输入放大」的压力用例模拟同一条链路，
+ * 这里锁定修复结果，并额外用一个「把字段撑大」的压力用例覆盖同一条链路，
  * 防止以后有人把 `min-width: 0` 删掉又不自知。
+ *
+ * 2026-09-16 起日期 / 开始时间改为「紧凑值 + 透明原生控件」的短字段
+ * （见 `tests/e2e/new-workout-fields.spec.ts`）：值的固有宽度仍然会顶宽轨道，
+ * 所以压力用例改成放大 `.session-field__value`，链路与原来完全一致。
  */
 
 const reviewDir = 'output/plan07r-review'
@@ -126,9 +130,12 @@ test('stays inside the viewport when the sheet fields grow', async ({ page }) =>
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
 
-  // 复现真机失守的那条链路：把 input 的固有最小宽度顶到远超轨道宽度。
-  // 只要 input / label / .sheet 上任何一处丢了 min-width: 0，这里就会失败。
-  await page.addStyleTag({ content: '.sheet input { font-size: 80px; }' })
+  // 复现真机失守的那条链路：把字段里文本的固有最小宽度顶到远超轨道宽度。
+  // `.session-field__control .session-field__value` 上的 `overflow: hidden`
+  // 会让这个 flex 项的 `min-width: auto` 归零，值才能收缩；去掉它这里就会溢出。
+  await page.addStyleTag({
+    content: '.sheet .session-field__value { font-size: 80px; }',
+  })
   await page.getByRole('button', { name: '新建训练' }).click()
   await expect(page.getByRole('dialog', { name: '新建训练' })).toBeVisible()
 

@@ -664,6 +664,8 @@ select:focus {
   font-size: 15px;
   text-align: center;
 }
+/* 日期 / 开始时间是短字段：390px（iPhone 12 主验收宽度）下也必须两列，
+   所以这里没有 `max-width: 400px` 的单列降级 —— 短字段不需要整行宽度。 */
 .create-workout-fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -768,6 +770,51 @@ select:focus {
 }
 .session-field__input.is-invalid {
   border-bottom-color: var(--color-danger);
+}
+/* 「新建训练」Sheet 的短字段：复用上面的 `.session-field` 排版，但值的可视盒子
+   是带边框的输入框（Sheet 是录入场景，需要明确的点击热区）。
+   原生 date/time 控件的固有宽度塞不进 173px 的两列轨道，iOS 还会用本地化
+   长格式（`2026年9月16日`）渲染，所以值改由 `.session-field__value` 紧凑渲染，
+   真正的 `<input>` 铺满整个盒子并保持透明 —— 点击仍然由系统原生选择器接管，
+   没有引入自定义日期选择器。 */
+.session-field__control {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 44px;
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: var(--color-surface);
+}
+.session-field__control .session-field__value {
+  /* `overflow: hidden` 不是装饰：它让这个 flex 项的 `min-width: auto` 归零，
+     值才能在 173px 的两列轨道里收缩。去掉它，一个长值就会把 Sheet 顶出视口
+     （`sheet-overflow.spec.ts` 的压力用例锁住的正是这一条）。 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.session-field__input--overlay {
+  position: absolute;
+  /* `inset: 0` 只能盖住内边距盒子，而原生控件的热区应该等于可见盒子，
+     所以向外扩 1px 吃掉边框，并把基类的 `width: 100%` 放开交给 inset 决定。
+     点标签、点值、点空白都会落到原生控件上。 */
+  z-index: 1;
+  inset: -1px;
+  width: auto;
+  height: auto;
+  min-height: 0;
+  border: 0;
+  border-radius: inherit;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.session-field:focus-within .session-field__control {
+  border-color: var(--color-primary);
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
 }
 .session-header__actions {
   display: flex;
@@ -1183,9 +1230,6 @@ a:focus-visible {
   .row-actions,
   .row-actions button {
     width: 100%;
-  }
-  .create-workout-fields {
-    grid-template-columns: minmax(0, 1fr);
   }
 }
 @media (min-width: 768px) {

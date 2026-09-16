@@ -467,6 +467,7 @@ READY_FOR_VISUAL_REVIEW
 
 2026-09-16
 07R-A / 07R-C                  ——> 密度修正完成，已 Commit / Push / 部署，等待真机验收
+新建训练 Sheet                 ——> 字段布局改为 390 下两列短字段，已 Commit / Push / 部署，等待真机验收
 07R-F / 07R-G / 07R-H / 07R-I  ——> 未完成，本轮未触碰
 ```
 
@@ -481,6 +482,31 @@ READY_FOR_VISUAL_REVIEW
 主验收   iPhone 12 — 390 × 844
 兼容验收            430 × 932
 ```
+
+### New Workout Sheet 字段契约（390 × 844 主验收）
+
+2026-09-16 明确：日期 / 开始时间是短字段，**390px 下也必须两列**。
+原先 `@media (max-width: 400px)` 里对 `.create-workout-fields` 的单列降级被移除 ——
+iPhone 12 正好是 390px，等于把主验收宽度当成「需要降级成单列的极窄屏」。
+
+```text
+小标签          11 / 14  650  tertiary   （复用 .session-field__label）
+值              16 / 22  tabular-nums    （复用 .session-field__value）
+字段盒          高 >= 44px / radius 10px / border 1px --color-border
+可点热区        = 可见盒子（原生控件以 inset: -1px 的透明层铺满）
+两列轨道        173 / 173px（390px，含 12px gap）
+字段总高        60px（原单列为 144px）
+```
+
+说明：
+
+- 原生 `input[type=date|time]` 的固有宽度塞不进 173px 的轨道，iOS 还会用
+  `2026年9月16日` 的本地化长格式渲染，所以值改由应用紧凑渲染，
+  控件本体保留为原生输入并铺满整个字段 —— 点击仍由系统原生选择器接管，
+  没有引入自定义日期选择器。
+- 值的容器必须 `overflow: hidden`：它让这个 flex 项的 `min-width: auto` 归零。
+  去掉后长值会把 Sheet 顶出视口，已用负向对照确认压力用例有效。
+- 断言锁定：`tests/e2e/new-workout-fields.spec.ts`。
 
 ### Record Row 数值契约（390 × 844 主验收）
 

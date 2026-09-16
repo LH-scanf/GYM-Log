@@ -258,12 +258,33 @@ Mobile-first：
 - inactive 使用 tertiary；
 - safe-area bottom。
 
+### Compact Field（短字段）
+
+日期、时间这类短值字段的排版：
+
+```text
+日期              开始时间
+[9月16日]         [13:44]
+```
+
+- 小标签在上（`.session-field__label`：11 / 14，650，tertiary）；
+- 值在下（`.session-field__value`：16 / 22，tabular-nums）；
+- 值由应用紧凑渲染，控件本体保留原生 `input[type=date|time]`，
+  以透明层铺满整个字段 → 点击仍打开系统原生选择器；
+- **短字段不需要整行宽度**：390px 下也保持两列，不做单列降级
+  （见 `design/UI_ACCEPTANCE.md §2.1`）；
+- 值的容器必须 `overflow: hidden`，否则长值会把外层顶出视口。
+
+以上表单字段用 `.session-field__control` 包出一个带边框的输入盒（Sheet 录入场景）；
+只读展示场景（Active Workout 的 Session Card）直接用 `.session-field__input` 的下划线变体。
+
 ### Sheet
 
 - 高频选择和短查看；
 - Add Exercise；
 - Previous Performance；
 - 短确认/选择。
+- 新建训练：见 `design/UI_ACCEPTANCE.md §2.1`。
 
 ### Full Page Form
 

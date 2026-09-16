@@ -45,13 +45,21 @@ export function formatSessionHeading(date: string | undefined): string {
   return `${Number(matched[2])}月${Number(matched[3])}日 · 周${weekdayOf(date)}`
 }
 
-export function formatSessionDate(date: string | undefined): string {
+/** `2026-09-16` → `9月16日`（跨年时带 `2025年` 前缀），不带星期。 */
+export function formatCompactDate(date: string | undefined): string {
   if (date === undefined) return '未设置日期'
   const matched = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date)
   if (matched === null) return date
   const year = Number(matched[1])
   const prefix = year === new Date().getFullYear() ? '' : `${year}年`
-  return `${prefix}${Number(matched[2])}月${Number(matched[3])}日 周${weekdayOf(date)}`
+  return `${prefix}${Number(matched[2])}月${Number(matched[3])}日`
+}
+
+export function formatSessionDate(date: string | undefined): string {
+  if (date === undefined) return '未设置日期'
+  const matched = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date)
+  if (matched === null) return date
+  return `${formatCompactDate(date)} 周${weekdayOf(date)}`
 }
 
 export function formatClock(time: string | undefined): string {
