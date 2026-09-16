@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test'
 test('manages an exercise family and exercise on a mobile device', async ({ page }) => {
   await page.goto('/exercises')
 
-  await page.getByRole('link', { name: '创建第一个动作' }).click()
+  await page.getByRole('link', { name: '新建动作' }).click()
   await expect(page.getByRole('heading', { name: '新建动作' })).toBeVisible()
 
   await page.getByLabel('动作名称').fill('反向山羊挺身')

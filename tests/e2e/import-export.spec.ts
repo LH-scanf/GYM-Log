@@ -25,7 +25,7 @@ test('exports a backup and validates an import before replacing local data', asy
   await page.getByRole('link', { name: '设置' }).click()
 
   const download = page.waitForEvent('download')
-  await page.getByRole('button', { name: '导出 JSON 备份' }).click()
+  await page.getByRole('button', { name: '导出 JSON' }).click()
   expect((await download).suggestedFilename()).toMatch(
     /^gymlog-backup-\d{4}-\d{2}-\d{2}\.json$/,
   )
