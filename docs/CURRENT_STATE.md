@@ -51,11 +51,12 @@ d4eb68f  rebuild exercises page + add-exercise sheet
 ## 当前状态
 
 - GymLog 已部署到 Cloudflare Pages：https://gym-log-wa6.pages.dev（生产分支 `master`）；
+- 版本号已更新为 `1.0.0`（`package.json` / `package-lock.json`）；
 - iPhone PWA 已可正常真实使用，`registerType: 'prompt'`，回前台会重新检查 SW 更新；
 - 核心功能闭环已经完成；Clean Fitness Utility Design System 已冻结并落实到全站；
 - 四个主 Tab、训练 Sheet、记录卡、统计和备份页面已完成视觉重构；
 - Mobile Chromium 的 320–430px 回归、safe-area CSS 和键盘相关核心交互已验证；
-- 下一阶段：Plan 08 — PWA Release（只做 V1.0 收口，不新增产品功能）。
+- 下一阶段：Plan 08 — PWA Release（进行中，只做 V1.0 收口，不新增产品功能）。
 
 ### Workout Flow / 导航（已实现）
 
@@ -78,7 +79,7 @@ d4eb68f  rebuild exercises page + add-exercise sheet
   `CHEST` / `BACK` / `SHOULDERS` / `ARMS` / `LEGS` / `CORE` / `CARDIO` / `OTHER`；
 - `officialExerciseCategories`（41 个精确名称 → category 映射）是正式动作分类的 Source of Truth；
 - `inferCategory` 仅作「新建建议」和「未知旧动作兜底」，不再作为 41 个正式动作的分类依据；
-- 一次性迁移 `reconcileExerciseCategories`：官方名称强制对齐（无论旧值），非官方动作仅 `category===undefined` 时兜底，跑完即停、不再覆盖用户手动修改；
+- 兜底迁移 `reconcileExerciseCategories`：已有 category 一律尊重、不覆盖，只对 `category===undefined` 的旧数据兜底（官方命中用官方值，未命中用 infer）；因此重复进入动作页幂等无副作用，用户手动改过、备份恢复回来的分类都永久保留；
 - 新建/编辑动作页在「动作名称」与「动作族」之间新增「身体部位」选择：新建用 `inferCategory` 作建议可改，编辑回显当前值可改，改名不重置 category；
 - category 与 ExerciseFamily 完全独立；未升级 Dexie schema version、未新增数据库索引。
 
@@ -87,5 +88,5 @@ d4eb68f  rebuild exercises page + add-exercise sheet
 ```text
 07  UI/UX Polish & Design System  PASS
 07R UI/UX Correction              PASS（真机最终验收待收口）
-08  PWA Release                   NEXT
+08  PWA Release                   IN PROGRESS
 ```
