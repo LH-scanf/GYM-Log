@@ -53,10 +53,13 @@ export class ExerciseManagementService {
   }
 
   /**
-   * 一次性修正已有动作的 category。
-   * - 正式动作库里的动作（精确名称匹配）无论当前分类是什么，都覆盖为最终值；
-   * - 其余动作仅在 category 缺失时用 infer 兜底（已是正式分类的不动）。
-   * 迁移完成后不再重复覆盖，之后用户在编辑页手动改的 category 永久保留。
+   * 兜底修正已有动作的 category。
+   * 已有 category 一律尊重，不做覆盖：无论动作是否命中正式库，只要 category
+   * 已有值就保持原样；只有 category 缺失的旧数据才兜底。
+   * - 命中正式库（精确名称匹配）→ 用正式分类兜底；
+   * - 未命中 → 用 infer 启发式兜底。
+   * 因此每次进入动作页重复调用是幂等的、无副作用的，用户手动改过的分类
+   * 以及备份恢复回来的分类都不会被覆盖。
    */
   async reconcileExerciseCategories(
     official: Readonly<Record<string, ExerciseCategory>>,
@@ -66,20 +69,17 @@ export class ExerciseManagementService {
     let changed = 0
 
     for (const exercise of exercises) {
-      const officialCategory = official[exercise.name]
-      if (officialCategory !== undefined) {
-        if (exercise.category !== officialCategory) {
-          await this.exercises.setCategory(exercise.id, officialCategory)
-          changed += 1
-        }
+      // 已有 category 一律尊重，不覆盖。
+      if (exercise.category !== undefined) {
         continue
       }
 
-      // 不在正式库：只兜底 category 缺失的旧动作，不覆盖已有分类。
-      if (exercise.category === undefined) {
-        await this.exercises.setCategory(exercise.id, infer(exercise.name))
-        changed += 1
-      }
+      const officialCategory = official[exercise.name]
+      await this.exercises.setCategory(
+        exercise.id,
+        officialCategory !== undefined ? officialCategory : infer(exercise.name),
+      )
+      changed += 1
     }
 
     return changed

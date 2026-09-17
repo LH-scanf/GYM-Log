@@ -45,8 +45,8 @@ describe('ExerciseManagementService.reconcileExerciseCategories', () => {
     await database.delete()
   })
 
-  it('overwrites a wrong category for an official exercise', async () => {
-    // 「反向蝴蝶机」之前被 infer 归成 OTHER/其他，正式分类应是 SHOULDERS。
+  it('does not overwrite an existing category on an official exercise', async () => {
+    // 正式动作已有分类（即使与官方值不一致，例如用户手动改过），必须尊重、不覆盖。
     await database.exercises.add(legacyExercise('反向蝴蝶机', 'OTHER'))
 
     await service.reconcileExerciseCategories(officialExerciseCategories, inferCategory)
@@ -54,7 +54,7 @@ describe('ExerciseManagementService.reconcileExerciseCategories', () => {
     const fixed = (await service.listExercises(true)).find(
       (exercise) => exercise.name === '反向蝴蝶机',
     )
-    expect(fixed?.category).toBe('SHOULDERS')
+    expect(fixed?.category).toBe('OTHER')
   })
 
   it('backfills a missing category on an official exercise', async () => {
@@ -94,5 +94,33 @@ describe('ExerciseManagementService.reconcileExerciseCategories', () => {
     )
     expect(custom?.category).toBe('CARDIO')
     expect(fresh?.category).toBe('OTHER')
+  })
+
+  it('does not overwrite a manually changed category across repeated reconciles', async () => {
+    // 用户手动把正式动作「深蹲」从 LEGS 改成 OTHER，之后多次进入动作页触发 reconcile，
+    // 必须始终尊重手动值，不得改回 LEGS。
+    await database.exercises.add(legacyExercise('深蹲', 'OTHER'))
+
+    await service.reconcileExerciseCategories(officialExerciseCategories, inferCategory)
+    await service.reconcileExerciseCategories(officialExerciseCategories, inferCategory)
+    await service.reconcileExerciseCategories(officialExerciseCategories, inferCategory)
+
+    const fixed = (await service.listExercises(true)).find(
+      (exercise) => exercise.name === '深蹲',
+    )
+    expect(fixed?.category).toBe('OTHER')
+  })
+
+  it('does not overwrite a category restored from backup', async () => {
+    // 备份恢复回来的动作带有 category，reconcile 不得覆盖它们。
+    // （模拟 replace-all 恢复后直接写入的、含 category 的动作数据。）
+    await database.exercises.add(legacyExercise('卧推', 'ARMS'))
+
+    await service.reconcileExerciseCategories(officialExerciseCategories, inferCategory)
+
+    const restored = (await service.listExercises(true)).find(
+      (exercise) => exercise.name === '卧推',
+    )
+    expect(restored?.category).toBe('ARMS')
   })
 })
