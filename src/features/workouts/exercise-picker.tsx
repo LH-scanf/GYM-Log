@@ -4,8 +4,19 @@ import { EmptyState, AppIcon, Sheet } from '../../shared/components/ui'
 import { exerciseManagementService } from '../../application/exercise-management-service'
 import { workoutLoggingService } from '../../application/workout-logging-service'
 import { getExerciseSummary } from '../exercises/exercise-summary'
+import {
+  categoryLabels,
+  categoryOrder,
+  type ExerciseCategory,
+} from '../exercises/exercise-category'
 
-type PickerTab = 'recent' | 'favorite' | 'all'
+/**
+ * 顶部筛选栏：最近 / 常用 / 胸 / 背 / 肩 / 手臂 / 腿 / 腹 / 有氧 / 全部。
+ * - 最近 / 常用 是特殊 tab；其余是身体部位分类。
+ * - 已归档动作不出现在这里。
+ * - 每个部位筛选结果内部仍按 ExerciseFamily 分组。
+ */
+type PickerTab = 'recent' | 'favorite' | ExerciseCategory | 'all'
 
 type PickerSection = {
   id: string
@@ -13,10 +24,13 @@ type PickerSection = {
   exercises: Exercise[]
 }
 
-const tabs: Array<{ key: PickerTab; label: string; icon: 'clock' | 'star' | 'grid' }> = [
+const leadingTabs: Array<{
+  key: 'recent' | 'favorite'
+  label: string
+  icon: 'clock' | 'star'
+}> = [
   { key: 'recent', label: '最近', icon: 'clock' },
   { key: 'favorite', label: '常用', icon: 'star' },
-  { key: 'all', label: '全部', icon: 'grid' },
 ]
 
 const RECENT_LIMIT = 5
@@ -50,17 +64,23 @@ export function ExercisePicker({ exercises, onClose, onSelect }: ExercisePickerP
     })
   }, [])
 
+  // 只保留未归档动作
+  const available = useMemo(
+    () => exercises.filter((exercise) => !exercise.archived),
+    [exercises],
+  )
+
   const matching = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase()
-    if (normalized === '') return exercises
+    if (normalized === '') return available
     const familyById = new Map(families.map((family) => [family.id, family]))
-    return exercises.filter((exercise) => {
+    return available.filter((exercise) => {
       if (exercise.name.toLocaleLowerCase().includes(normalized)) return true
       const family =
         exercise.familyId === undefined ? undefined : familyById.get(exercise.familyId)
       return family?.name.toLocaleLowerCase().includes(normalized) === true
     })
-  }, [exercises, families, query])
+  }, [available, families, query])
 
   const sections = useMemo<PickerSection[]>(() => {
     const familyById = new Map(families.map((family) => [family.id, family]))
@@ -72,6 +92,12 @@ export function ExercisePicker({ exercises, onClose, onSelect }: ExercisePickerP
       return favorites.length === 0
         ? []
         : [{ id: 'favorite', title: '常用动作', exercises: favorites }]
+    }
+
+    if (tab !== 'recent' && tab !== 'all') {
+      // 身体部位分类：只显示该分类，内部按 Family 分组
+      const scoped = matching.filter((exercise) => exercise.category === tab)
+      return groupByFamily(scoped, familyById)
     }
 
     if (tab === 'all') {
@@ -91,6 +117,15 @@ export function ExercisePicker({ exercises, onClose, onSelect }: ExercisePickerP
     ]
   }, [families, matching, recentIds, tab])
 
+  const emptyTitle =
+    tab === 'favorite'
+      ? '还没有常用动作。'
+      : tab !== 'recent' && tab !== 'all'
+        ? `还没有${categoryLabels[tab]}动作。`
+        : query.trim() === ''
+          ? '没有可用动作'
+          : '没有匹配的动作'
+
   return (
     <Sheet className="sheet--picker" onClose={onClose} title="添加动作">
       <div className="picker">
@@ -105,7 +140,7 @@ export function ExercisePicker({ exercises, onClose, onSelect }: ExercisePickerP
           />
         </label>
         <div aria-label="筛选动作" className="chip-row chip-row--fill" role="group">
-          {tabs.map((item) => (
+          {leadingTabs.map((item) => (
             <button
               aria-pressed={tab === item.key}
               className="chip chip--fill"
@@ -117,17 +152,28 @@ export function ExercisePicker({ exercises, onClose, onSelect }: ExercisePickerP
               {item.label}
             </button>
           ))}
+          {categoryOrder.map((category) => (
+            <button
+              aria-pressed={tab === category}
+              className="chip chip--fill"
+              key={category}
+              onClick={() => setTab(category)}
+              type="button"
+            >
+              {categoryLabels[category]}
+            </button>
+          ))}
+          <button
+            aria-pressed={tab === 'all'}
+            className="chip chip--fill"
+            onClick={() => setTab('all')}
+            type="button"
+          >
+            全部
+          </button>
         </div>
         {sections.length === 0 ? (
-          <EmptyState
-            title={
-              tab === 'favorite'
-                ? '还没有常用动作。'
-                : query.trim() === ''
-                  ? '没有可用动作'
-                  : '没有匹配的动作'
-            }
-          />
+          <EmptyState title={emptyTitle} />
         ) : (
           sections.map((section) => (
             <section

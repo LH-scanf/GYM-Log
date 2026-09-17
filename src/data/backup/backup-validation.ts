@@ -5,6 +5,7 @@ import {
 } from '../../domain/exercise/validation'
 import type {
   Exercise,
+  ExerciseCategory,
   ExerciseFamily,
   ExerciseRecord,
   ExerciseRecordValues,
@@ -37,6 +38,17 @@ const loadModes: ReadonlySet<LoadMode> = new Set([
   'ASSISTANCE',
 ])
 const sides: ReadonlySet<Side> = new Set(['LEFT', 'RIGHT', 'BOTH'])
+
+const categories: ReadonlySet<ExerciseCategory> = new Set([
+  'CHEST',
+  'BACK',
+  'SHOULDERS',
+  'ARMS',
+  'LEGS',
+  'CORE',
+  'CARDIO',
+  'OTHER',
+])
 
 export function validateBackup(value: unknown): GymLogBackupV1 {
   const root = asObject(value, 'Backup must be an object.')
@@ -168,6 +180,7 @@ function parseExercise(value: unknown): Exercise {
     ...(input.familyId === undefined
       ? {}
       : { familyId: parseId(input.familyId, 'Exercise familyId') }),
+    ...(input.category === undefined ? {} : { category: parseCategory(input.category) }),
     recordSchema: parseRecordSchema(input.recordSchema),
     loadMode: parseLoadMode(input.loadMode),
     archived: parseBoolean(input.archived, 'Exercise archived'),
@@ -387,6 +400,14 @@ function parseSide(value: unknown): Side {
   }
 
   return value as Side
+}
+
+function parseCategory(value: unknown): ExerciseCategory {
+  if (typeof value !== 'string' || !categories.has(value as ExerciseCategory)) {
+    throw new ImportFormatError('category is unsupported.')
+  }
+
+  return value as ExerciseCategory
 }
 
 function errorMessage(error: unknown): string {

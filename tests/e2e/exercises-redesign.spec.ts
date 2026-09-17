@@ -27,6 +27,12 @@ async function createExercise(page: Page, name: string, family?: string) {
   await expect(page).toHaveURL(/\/exercises\/[^/]+$/)
 }
 
+// 访问一次动作页，触发 category 的一次性补全迁移（幂等）。
+async function backfillCategories(page: Page) {
+  await page.goto('/exercises')
+  await expect(page.getByRole('heading', { name: '动作', exact: true })).toBeVisible()
+}
+
 test('exercises page follows the reference structure and keeps row actions', async ({
   page,
 }) => {
@@ -99,6 +105,7 @@ test('add exercise sheet follows the reference structure', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await createExercise(page, '侧平举（反手）')
   await createExercise(page, '二头弯举')
+  await backfillCategories(page)
 
   // 先完成一次训练，让「最近使用」有真实数据
   await page.goto('/')
@@ -130,7 +137,19 @@ test('add exercise sheet follows the reference structure', async ({ page }) => {
 
   await expect(picker.getByLabel('搜索动作')).toBeVisible()
   const chips = picker.getByRole('group', { name: '筛选动作' })
-  for (const chip of ['最近', '常用', '全部']) {
+  // 顶部筛选栏：最近 / 常用 + 八个部位 + 全部
+  for (const chip of [
+    '最近',
+    '常用',
+    '胸',
+    '背',
+    '肩',
+    '手臂',
+    '腿',
+    '腹',
+    '有氧',
+    '全部',
+  ]) {
     await expect(chips.getByRole('button', { name: chip, exact: true })).toBeVisible()
   }
   await expect(picker.getByText('最近使用')).toBeVisible()
@@ -143,14 +162,26 @@ test('add exercise sheet follows the reference structure', async ({ page }) => {
   await expect(picker).toBeHidden()
   await expect(page.locator('.exercise-group')).toHaveCount(1)
 
-  // 「常用」tab：还没有星标时给出轻提示
+  // 部位筛选：「侧平举」归类为肩，「二头弯举」归类为手臂
   await page.getByRole('button', { name: '添加动作' }).click()
-  const pickerAgain = page.getByRole('dialog', { name: '添加动作' })
-  await pickerAgain
+  const pickerShoulder = page.getByRole('dialog', { name: '添加动作' })
+  await pickerShoulder
+    .getByRole('group', { name: '筛选动作' })
+    .getByRole('button', { name: '肩' })
+    .click()
+  await expect(
+    pickerShoulder.locator('.picker-ex-row').filter({ hasText: '侧平举（反手）' }),
+  ).toBeVisible()
+  await expect(
+    pickerShoulder.locator('.picker-ex-row').filter({ hasText: '二头弯举' }),
+  ).toHaveCount(0)
+
+  // 「常用」tab：还没有星标时给出轻提示
+  await pickerShoulder
     .getByRole('group', { name: '筛选动作' })
     .getByRole('button', { name: '常用' })
     .click()
-  await expect(pickerAgain.getByText('还没有常用动作。')).toBeVisible()
+  await expect(pickerShoulder.getByText('还没有常用动作。')).toBeVisible()
 
   await page.screenshot({
     path: `${reviewDir}/exercise-picker-redesign-390x844.png`,

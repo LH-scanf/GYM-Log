@@ -9,6 +9,13 @@ export type LoadMode = 'NONE' | 'EXTERNAL' | 'BODYWEIGHT_PLUS' | 'ASSISTANCE'
 
 export type Side = 'LEFT' | 'RIGHT' | 'BOTH'
 
+/**
+ * 动作的身体部位 / 分类，独立于 ExerciseFamily（Family 表达动作变式关系）。
+ * 用于「添加动作」Sheet 的部位筛选；历史数据无 category 时保持兼容（可选字段）。
+ */
+export type ExerciseCategory =
+  'CHEST' | 'BACK' | 'SHOULDERS' | 'ARMS' | 'LEGS' | 'CORE' | 'CARDIO' | 'OTHER'
+
 export interface RecordSchema {
   reps: FieldRequirement
   load: FieldRequirement
@@ -32,6 +39,7 @@ export interface Exercise {
   id: UUID
   name: string
   familyId?: UUID
+  category?: ExerciseCategory
   recordSchema: RecordSchema
   loadMode: LoadMode
   archived: boolean

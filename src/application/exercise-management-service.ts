@@ -9,7 +9,7 @@ import {
   type UpdateExerciseInput,
 } from '../data/repositories/exercise-repository'
 import type { GymLogDatabase } from '../data/db/gym-log-database'
-import type { Exercise, ExerciseFamily } from '../domain/exercise/types'
+import type { Exercise, ExerciseCategory, ExerciseFamily } from '../domain/exercise/types'
 
 export class ExerciseManagementService {
   private readonly exercises: ExerciseRepository
@@ -46,6 +46,28 @@ export class ExerciseManagementService {
 
   setFavoriteExercise(id: string, favorite: boolean): Promise<Exercise> {
     return this.exercises.setFavorite(id, favorite)
+  }
+
+  setCategoryExercise(id: string, category: ExerciseCategory): Promise<Exercise> {
+    return this.exercises.setCategory(id, category)
+  }
+
+  /**
+   * 一次性补全历史动作的 category（按名称关键词启发式归类）。
+   * 幂等：只处理 category 缺失的动作，已有 category 的保持不变；
+   * 匹配不上的归 OTHER。不动 schema version、不加索引。
+   */
+  async backfillExerciseCategories(
+    infer: (name: string) => ExerciseCategory,
+  ): Promise<number> {
+    const exercises = await this.exercises.list({ includeArchived: true })
+    const missing = exercises.filter((exercise) => exercise.category === undefined)
+    await Promise.all(
+      missing.map((exercise) =>
+        this.exercises.setCategory(exercise.id, infer(exercise.name)),
+      ),
+    )
+    return missing.length
   }
 
   canHardDeleteExercise(id: string): Promise<boolean> {

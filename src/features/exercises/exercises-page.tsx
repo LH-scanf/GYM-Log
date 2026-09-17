@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { exerciseManagementService } from '../../application/exercise-management-service'
 import type { Exercise, ExerciseFamily } from '../../domain/exercise/types'
 import { getExerciseSummary } from './exercise-summary'
+import { inferCategory } from './exercise-category'
 import { AppIcon, EmptyState, PageHeader, Sheet } from '../../shared/components/ui'
 
 type ExerciseFilter = 'all' | 'favorite' | 'archived'
@@ -47,6 +48,8 @@ export function ExercisesPage() {
   const load = useCallback(async () => {
     setIsLoading(true)
     try {
+      // 一次性补全历史动作的 category（幂等，之后进入即无操作）
+      await exerciseManagementService.backfillExerciseCategories(inferCategory)
       const [loadedExercises, loadedFamilies] = await Promise.all([
         exerciseManagementService.listExercises(true),
         exerciseManagementService.listFamilies(),

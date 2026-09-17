@@ -1,12 +1,19 @@
 import { DataIntegrityError } from '../../domain/errors'
+import { inferCategory } from '../../domain/exercise/category'
 import { assertValidRecordSchema } from '../../domain/exercise/validation'
-import type { Exercise, LoadMode, RecordSchema } from '../../domain/exercise/types'
+import type {
+  Exercise,
+  ExerciseCategory,
+  LoadMode,
+  RecordSchema,
+} from '../../domain/exercise/types'
 import type { GymLogDatabase } from '../db/gym-log-database'
 import { assertFound, assertNonEmptyName, createId, nowIso } from './repository-helpers'
 
 export interface CreateExerciseInput {
   name: string
   familyId?: string
+  category?: ExerciseCategory
   recordSchema: RecordSchema
   loadMode: LoadMode
 }
@@ -32,6 +39,8 @@ export class ExerciseRepository {
       id: createId(),
       name: assertNonEmptyName(input.name, 'Exercise'),
       ...(input.familyId === undefined ? {} : { familyId: input.familyId }),
+      // 未显式指定 category 时按名称自动归类，保证新动作在部位筛选里可见。
+      category: input.category ?? inferCategory(input.name),
       recordSchema: input.recordSchema,
       loadMode: input.loadMode,
       archived: false,
@@ -84,6 +93,8 @@ export class ExerciseRepository {
       ...(input.familyId === undefined
         ? { familyId: undefined }
         : { familyId: input.familyId }),
+      // 显式指定则用指定值；否则保留原分类（改名不重置分类）。
+      ...(input.category === undefined ? {} : { category: input.category }),
       recordSchema: input.recordSchema,
       loadMode: input.loadMode,
       updatedAt: nowIso(),
@@ -104,6 +115,14 @@ export class ExerciseRepository {
   async setFavorite(id: string, favorite: boolean): Promise<Exercise> {
     const exercise = assertFound(await this.getById(id), 'Exercise', id)
     const updated = { ...exercise, favorite, updatedAt: nowIso() }
+
+    await this.database.exercises.put(updated)
+    return updated
+  }
+
+  async setCategory(id: string, category: ExerciseCategory): Promise<Exercise> {
+    const exercise = assertFound(await this.getById(id), 'Exercise', id)
+    const updated = { ...exercise, category, updatedAt: nowIso() }
 
     await this.database.exercises.put(updated)
     return updated
