@@ -4,6 +4,7 @@ import { exerciseManagementService } from '../../application/exercise-management
 import type { Exercise, ExerciseFamily } from '../../domain/exercise/types'
 import { getExerciseSummary } from './exercise-summary'
 import { inferCategory } from './exercise-category'
+import { officialExerciseCategories } from '../../domain/exercise/category'
 import { AppIcon, EmptyState, PageHeader, Sheet } from '../../shared/components/ui'
 
 type ExerciseFilter = 'all' | 'favorite' | 'archived'
@@ -48,8 +49,11 @@ export function ExercisesPage() {
   const load = useCallback(async () => {
     setIsLoading(true)
     try {
-      // 一次性补全历史动作的 category（幂等，之后进入即无操作）
-      await exerciseManagementService.backfillExerciseCategories(inferCategory)
+      // 一次性修正 category：正式库精确名称覆盖，其余缺失的兜底（之后进入即无操作）
+      await exerciseManagementService.reconcileExerciseCategories(
+        officialExerciseCategories,
+        inferCategory,
+      )
       const [loadedExercises, loadedFamilies] = await Promise.all([
         exerciseManagementService.listExercises(true),
         exerciseManagementService.listFamilies(),

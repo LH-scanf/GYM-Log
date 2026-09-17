@@ -3,11 +3,14 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { exerciseManagementService } from '../../application/exercise-management-service'
 import type {
   Exercise,
+  ExerciseCategory,
   ExerciseFamily,
   FieldRequirement,
   LoadMode,
   RecordSchema,
 } from '../../domain/exercise/types'
+import { categoryLabels, categoryOrder } from './exercise-category'
+import { inferCategory } from '../../domain/exercise/category'
 import { TopBar } from '../../shared/components/ui'
 
 const fieldLabels: Array<[keyof RecordSchema, string]> = [
@@ -41,6 +44,8 @@ export function ExerciseFormPage({ mode }: ExerciseFormPageProps) {
   const [allExercises, setAllExercises] = useState<Exercise[]>([])
   const [name, setName] = useState('')
   const [familyId, setFamilyId] = useState('')
+  const [category, setCategory] = useState<ExerciseCategory>('OTHER')
+  const [categoryTouched, setCategoryTouched] = useState(false)
   const [schema, setSchema] = useState<RecordSchema>(emptySchema)
   const [loadMode, setLoadMode] = useState<LoadMode>('NONE')
   const [quickFamilyName, setQuickFamilyName] = useState('')
@@ -74,6 +79,8 @@ export function ExerciseFormPage({ mode }: ExerciseFormPageProps) {
           } else {
             setName(exercise.name)
             setFamilyId(exercise.familyId ?? '')
+            setCategory(exercise.category ?? 'OTHER')
+            setCategoryTouched(true)
             setSchema(exercise.recordSchema)
             setLoadMode(exercise.loadMode)
           }
@@ -119,6 +126,14 @@ export function ExerciseFormPage({ mode }: ExerciseFormPageProps) {
     }
   }
 
+  function changeName(value: string) {
+    setName(value)
+    // 新建时：category 未被手动改过，则随名称实时推荐；改过则不覆盖。
+    if (mode === 'create' && !categoryTouched) {
+      setCategory(inferCategory(value))
+    }
+  }
+
   async function createQuickFamily() {
     try {
       const family = await exerciseManagementService.createFamily({
@@ -144,6 +159,7 @@ export function ExerciseFormPage({ mode }: ExerciseFormPageProps) {
       const input = {
         name,
         ...(familyId === '' ? {} : { familyId }),
+        category,
         recordSchema: schema,
         loadMode,
       }
@@ -182,7 +198,7 @@ export function ExerciseFormPage({ mode }: ExerciseFormPageProps) {
           动作名称
           <input
             autoFocus
-            onChange={(event) => setName(event.target.value)}
+            onChange={(event) => changeName(event.target.value)}
             placeholder="例如：反向山羊挺身"
             required
             value={name}
@@ -193,6 +209,23 @@ export function ExerciseFormPage({ mode }: ExerciseFormPageProps) {
             已有同名动作。允许保存，但请确认它们确实需要独立统计。
           </p>
         )}
+
+        <label>
+          身体部位
+          <select
+            onChange={(event) => {
+              setCategory(event.target.value as ExerciseCategory)
+              setCategoryTouched(true)
+            }}
+            value={category}
+          >
+            {categoryOrder.map((value) => (
+              <option key={value} value={value}>
+                {categoryLabels[value]}
+              </option>
+            ))}
+          </select>
+        </label>
 
         <label>
           动作族（可选）

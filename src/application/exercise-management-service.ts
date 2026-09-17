@@ -53,21 +53,36 @@ export class ExerciseManagementService {
   }
 
   /**
-   * 一次性补全历史动作的 category（按名称关键词启发式归类）。
-   * 幂等：只处理 category 缺失的动作，已有 category 的保持不变；
-   * 匹配不上的归 OTHER。不动 schema version、不加索引。
+   * 一次性修正已有动作的 category。
+   * - 正式动作库里的动作（精确名称匹配）无论当前分类是什么，都覆盖为最终值；
+   * - 其余动作仅在 category 缺失时用 infer 兜底（已是正式分类的不动）。
+   * 迁移完成后不再重复覆盖，之后用户在编辑页手动改的 category 永久保留。
    */
-  async backfillExerciseCategories(
+  async reconcileExerciseCategories(
+    official: Readonly<Record<string, ExerciseCategory>>,
     infer: (name: string) => ExerciseCategory,
   ): Promise<number> {
     const exercises = await this.exercises.list({ includeArchived: true })
-    const missing = exercises.filter((exercise) => exercise.category === undefined)
-    await Promise.all(
-      missing.map((exercise) =>
-        this.exercises.setCategory(exercise.id, infer(exercise.name)),
-      ),
-    )
-    return missing.length
+    let changed = 0
+
+    for (const exercise of exercises) {
+      const officialCategory = official[exercise.name]
+      if (officialCategory !== undefined) {
+        if (exercise.category !== officialCategory) {
+          await this.exercises.setCategory(exercise.id, officialCategory)
+          changed += 1
+        }
+        continue
+      }
+
+      // 不在正式库：只兜底 category 缺失的旧动作，不覆盖已有分类。
+      if (exercise.category === undefined) {
+        await this.exercises.setCategory(exercise.id, infer(exercise.name))
+        changed += 1
+      }
+    }
+
+    return changed
   }
 
   canHardDeleteExercise(id: string): Promise<boolean> {
