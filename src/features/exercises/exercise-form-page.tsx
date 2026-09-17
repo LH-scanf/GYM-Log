@@ -170,7 +170,6 @@ export function ExerciseFormPage({ mode }: ExerciseFormPageProps) {
         headingId="page-title"
         title={mode === 'create' ? '新建动作' : '编辑动作'}
       />
-      <p className="eyebrow">GymLog</p>
 
       {error === undefined ? null : (
         <p className="form-error" role="alert">
@@ -296,7 +295,6 @@ export function ExerciseFormPage({ mode }: ExerciseFormPageProps) {
 function PageState({ message }: { message: string }) {
   return (
     <section className="page" role="status">
-      <p className="eyebrow">GymLog</p>
       <h1>{message}</h1>
     </section>
   )

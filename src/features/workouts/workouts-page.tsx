@@ -82,7 +82,6 @@ export function WorkoutsPage() {
         <>
           <div className="home-header">
             <div>
-              <p className="eyebrow">GymLog</p>
               <h1 id="page-title">训练</h1>
             </div>
             <button

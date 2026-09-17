@@ -6,7 +6,6 @@ type PlaceholderPageProps = {
 export function PlaceholderPage({ title, description }: PlaceholderPageProps) {
   return (
     <section aria-labelledby="page-title" className="page">
-      <p className="eyebrow">GymLog</p>
       <h1 id="page-title">{title}</h1>
       <div className="placeholder-card">
         <p>{description}</p>

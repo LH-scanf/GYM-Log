@@ -90,7 +90,7 @@ test('training home groups history, surfaces unfinished work and stays quiet', a
   await expect(page.getByText('暂无训练记录')).toBeVisible()
   await expect(page.locator('.workout-week')).toHaveCount(0)
   await expect(page.locator('.empty-state')).toHaveCount(0)
-  await expect(page.locator('.home-header .eyebrow')).toHaveText('GymLog')
+  await expect(page.locator('.home-header .eyebrow')).toHaveCount(0)
   await expect(page.getByRole('heading', { name: '训练', exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: '新建训练' })).toBeVisible()
 

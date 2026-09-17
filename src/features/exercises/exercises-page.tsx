@@ -156,7 +156,6 @@ export function ExercisesPage() {
     <section aria-labelledby="page-title" className="page exercises-page">
       <div className="page-heading">
         <div>
-          <p className="eyebrow">GymLog</p>
           <h1 id="page-title">{archivedView ? '已归档动作' : '动作'}</h1>
         </div>
         {archivedView ? null : (
