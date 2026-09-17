@@ -171,6 +171,9 @@ function parseExercise(value: unknown): Exercise {
     recordSchema: parseRecordSchema(input.recordSchema),
     loadMode: parseLoadMode(input.loadMode),
     archived: parseBoolean(input.archived, 'Exercise archived'),
+    ...(input.favorite === undefined
+      ? {}
+      : { favorite: parseBoolean(input.favorite, 'Exercise favorite') }),
     createdAt: parseIsoDateTime(input.createdAt, 'Exercise createdAt'),
     updatedAt: parseIsoDateTime(input.updatedAt, 'Exercise updatedAt'),
   }

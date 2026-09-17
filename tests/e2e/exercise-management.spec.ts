@@ -23,13 +23,34 @@ test('manages an exercise family and exercise on a mobile device', async ({ page
   await page.getByRole('link', { name: '返回动作列表' }).click()
   await expect(page.getByText('反向山羊挺身（器械）')).toBeVisible()
 
+  // 归档入口在行内的「更多操作」菜单里
+  const row = page.locator('.ex-row').filter({ hasText: '反向山羊挺身（器械）' })
   page.once('dialog', (dialog) => dialog.accept())
-  await page.getByRole('button', { name: '归档' }).click()
+  await row.getByRole('button', { name: '反向山羊挺身（器械） 更多操作' }).click()
+  await page
+    .getByRole('dialog', { name: '反向山羊挺身（器械）' })
+    .getByRole('button', { name: '归档' })
+    .click()
   await expect(page.getByText('反向山羊挺身（器械）')).not.toBeVisible()
 
-  await page.getByRole('link', { name: '查看已归档动作' }).click()
-  await page.getByRole('button', { name: '恢复' }).click()
+  // 已归档列表通过筛选 chips 进入
+  await page
+    .getByRole('group', { name: '筛选动作' })
+    .getByRole('button', { name: '已归档' })
+    .click()
+  await expect(page.getByText('反向山羊挺身（器械）')).toBeVisible()
+
+  const archivedRow = page.locator('.ex-row').filter({ hasText: '反向山羊挺身（器械）' })
+  await archivedRow.getByRole('button', { name: '反向山羊挺身（器械） 更多操作' }).click()
+  await page
+    .getByRole('dialog', { name: '反向山羊挺身（器械）' })
+    .getByRole('button', { name: '恢复' })
+    .click()
   await expect(page.getByText('没有已归档动作。')).toBeVisible()
-  await page.getByRole('link', { name: '返回动作列表' }).click()
+
+  await page
+    .getByRole('group', { name: '筛选动作' })
+    .getByRole('button', { name: '全部' })
+    .click()
   await expect(page.getByText('反向山羊挺身（器械）')).toBeVisible()
 })

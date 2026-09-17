@@ -101,6 +101,14 @@ export class ExerciseRepository {
     return this.setArchived(id, false)
   }
 
+  async setFavorite(id: string, favorite: boolean): Promise<Exercise> {
+    const exercise = assertFound(await this.getById(id), 'Exercise', id)
+    const updated = { ...exercise, favorite, updatedAt: nowIso() }
+
+    await this.database.exercises.put(updated)
+    return updated
+  }
+
   async canHardDelete(id: string): Promise<boolean> {
     const block = await this.database.exerciseBlocks
       .where('exerciseId')

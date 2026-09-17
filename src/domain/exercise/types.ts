@@ -35,6 +35,7 @@ export interface Exercise {
   recordSchema: RecordSchema
   loadMode: LoadMode
   archived: boolean
+  favorite?: boolean
   createdAt: ISODateTime
   updatedAt: ISODateTime
 }

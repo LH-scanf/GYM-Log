@@ -44,6 +44,10 @@ export class ExerciseManagementService {
     return this.exercises.restore(id)
   }
 
+  setFavoriteExercise(id: string, favorite: boolean): Promise<Exercise> {
+    return this.exercises.setFavorite(id, favorite)
+  }
+
   canHardDeleteExercise(id: string): Promise<boolean> {
     return this.exercises.canHardDelete(id)
   }

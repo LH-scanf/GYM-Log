@@ -14,6 +14,10 @@ type IconName =
   | 'warning'
   | 'clock'
   | 'trend'
+  | 'search'
+  | 'star'
+  | 'sort'
+  | 'grid'
 
 const paths: Record<IconName, ReactNode> = {
   training: (
@@ -67,13 +71,39 @@ const paths: Record<IconName, ReactNode> = {
     </>
   ),
   trend: <path d="M4 16.5 9 11l3.5 3.5L20 6.5m0 0h-4.5m4.5 0v4.5" />,
+  search: (
+    <>
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="m20 20-4.3-4.3" />
+    </>
+  ),
+  star: <path d="m12 3.8 2.5 5 5.5.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.5-.8z" />,
+  sort: (
+    <>
+      <path d="M8 5.5v13m0 0-3-3m3 3 3-3" />
+      <path d="M16 18.5v-13m0 0-3 3m3-3 3 3" />
+    </>
+  ),
+  grid: (
+    <>
+      <path d="M4.5 4.5h5.5V10H4.5zM14 4.5h5.5V10H14zM4.5 14H10v5.5H4.5zM14 14h5.5v5.5H14z" />
+    </>
+  ),
 }
 
-export function AppIcon({ name, size = 20 }: { name: IconName; size?: number }) {
+export function AppIcon({
+  name,
+  size = 20,
+  className,
+}: {
+  name: IconName
+  size?: number
+  className?: string
+}) {
   return (
     <svg
       aria-hidden="true"
-      className="app-icon"
+      className={className === undefined ? 'app-icon' : `app-icon ${className}`}
       fill="none"
       height={size}
       stroke="currentColor"
@@ -155,10 +185,12 @@ export function Sheet({
   title,
   children,
   onClose,
+  className,
 }: {
   title: string
   children: ReactNode
   onClose: () => void
+  className?: string
 }) {
   useEffect(() => {
     const closeOnEscape = (event: KeyboardEvent) => {
@@ -172,7 +204,7 @@ export function Sheet({
       <section
         aria-label={title}
         aria-modal="true"
-        className="sheet"
+        className={className === undefined ? 'sheet' : `sheet ${className}`}
         onMouseDown={(event) => event.stopPropagation()}
         role="dialog"
       >
