@@ -86,7 +86,22 @@ d4eb68f  rebuild exercises page + add-exercise sheet
 ## 后续路线
 
 ```text
+00  Project Bootstrap             PASS
+01  Data Foundation               PASS
+02  Exercise Management           PASS
+03  Workout Logging               PASS
+04  History & Editing             PASS
+05  Statistics                    PASS
+06  Import / Export               PASS
 07  UI/UX Polish & Design System  PASS
-07R UI/UX Correction              PASS（真机最终验收待收口）
-08  PWA Release                   IN PROGRESS
+07R UI/UX Correction              PASS
+08  PWA Release                   PASS — v1.0.0 已发布
 ```
+
+## V1.0 发布信息
+
+- 版本：`v1.0.0`（tag 与 GitHub Release 已发布）
+- Release：https://github.com/LH-scanf/GYM-Log/releases/tag/v1.0.0
+- 生产地址：https://gym-log-wa6.pages.dev
+- 数据库 schema version：`1`（未升级、未新增索引）
+- V1.0 进入长期维护期；后续产品功能需单独立项。

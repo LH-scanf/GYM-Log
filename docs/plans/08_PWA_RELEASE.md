@@ -214,15 +214,15 @@ Plan 08 不做（不新增产品功能）：
 
 - [x] 08A Version Finalization（版本号 `1.0.0` 已提交 `a0083f2`；reconcile 修复已提交 `1aa1232`）
 - [x] 08B Full Quality Gate（typecheck / lint / test 126 / build / e2e 29 / format:check 全绿）
-- [ ] 08C PWA Install & Display（含 07R 真机视觉 Release Pass —— 需用户本人真机操作）
-- [ ] 08D Offline（需用户本人飞行模式操作）
-- [ ] 08E Update（需用户本人真机部署后回前台验证）
-- [ ] 08F Backup / Restore（破坏性 replace-all 需先备份，真机操作）
+- [x] 08C PWA Install & Display（含 07R 真机视觉 Release Pass —— 真机验证通过，无问题）
+- [x] 08D Offline（真机飞行模式验证通过）
+- [x] 08E Update（真机部署后回前台验证通过）
+- [x] 08F Backup / Restore（真机备份恢复验证通过，category 正确还原且不被覆盖）
 - [x] 08G Cloudflare Pages Deployment（success，线上 index-CQvlQHvm.js 与本地 dist 一致）
-- [ ] 08H Git Tag & GitHub Release（发布动作，需用户确认后执行）
-- [ ] 08I Documentation Sync（CURRENT_STATE 已更新，随最终 Release 一起收口）
-- [ ] Acceptance Criteria 全部满足
-- [ ] 本 Plan 专项测试 / Review 完成
+- [x] 08H Git Tag & GitHub Release（tag `v1.0.0` + Release 已发布：https://github.com/LH-scanf/GYM-Log/releases/tag/v1.0.0）
+- [x] 08I Documentation Sync（CURRENT_STATE 已更新）
+- [x] Acceptance Criteria 全部满足
+- [x] 本 Plan 专项测试 / Review 完成
 - [x] schema version 仍为 `1`、未新增索引
 
 通用自审、文档同步、Commit、Push 由 `AGENTS.md` 负责。
