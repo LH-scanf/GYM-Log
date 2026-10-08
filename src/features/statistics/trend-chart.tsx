@@ -5,21 +5,16 @@ import { formatMetric } from './format'
 /**
  * 趋势折线图。
  *
- * - 默认（`compact=false`）：折线下方给每个数据点一个可点按钮，适合动作统计页这种
- *   「一眼看全部采样日」的场景。
- * - `compact=true`：不渲染按钮列表，直接在折线圆点上点选，适合统计页趋势卡这种
- *   空间受限、又不想让按钮把卡片撑长的场景。
+ * 折线下方的日期按钮与图中圆点均可选择真实数据点。
  */
 export function TrendChart({
   values,
   unit,
-  compact = false,
   domainStart,
   domainEnd,
 }: {
   values: TrendPoint[]
   unit: string
-  compact?: boolean
   domainStart?: string
   domainEnd?: string
 }) {
@@ -51,7 +46,7 @@ export function TrendChart({
     `${dateLabel(item)}：${formatMetric(item.value)}${unit}`
   return (
     <>
-      <div className={`trend-chart${compact ? ' trend-chart--compact' : ''}`}>
+      <div className="trend-chart">
         <svg
           aria-label="趋势数据点"
           preserveAspectRatio="none"
@@ -92,23 +87,21 @@ export function TrendChart({
             </g>
           ))}
         </svg>
-        {!compact && (
-          <div aria-label="趋势日期" className="trend-chart__point-list" role="group">
-            {values.map((item, index) => (
-              <button
-                aria-pressed={active === index}
-                className="trend-chart__point-button"
-                key={`${item.date}-${index}`}
-                onClick={() => setSelected(index)}
-                type="button"
-              >
-                {item.endDate
-                  ? `${item.date.slice(5)}–${item.endDate.slice(5)}`
-                  : item.date.slice(5)}
-              </button>
-            ))}
-          </div>
-        )}
+        <div aria-label="趋势日期" className="trend-chart__point-list" role="group">
+          {values.map((item, index) => (
+            <button
+              aria-pressed={active === index}
+              className="trend-chart__point-button"
+              key={`${item.date}-${index}`}
+              onClick={() => setSelected(index)}
+              type="button"
+            >
+              {item.endDate
+                ? `${item.date.slice(5)}–${item.endDate.slice(5)}`
+                : item.date.slice(5)}
+            </button>
+          ))}
+        </div>
       </div>
       <p className="trend-tooltip" role="status">
         {dateLabel(point)}：

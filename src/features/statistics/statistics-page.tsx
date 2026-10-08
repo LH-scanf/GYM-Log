@@ -1,17 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { statisticsService } from '../../application/statistics-service'
-import type { Exercise } from '../../domain/exercise/types'
-import type {
-  ExerciseStatistics,
-  HeatmapDay,
-  OverviewStatistics,
-  TrendPoint,
-} from '../../domain/statistics/statistics'
+import type { HeatmapDay, OverviewStatistics } from '../../domain/statistics/statistics'
 import type { WorkoutSession } from '../../domain/workout/types'
 import { formatDuration } from '../workouts/workout-format'
-import { AppIcon, EmptyState, PageHeader, Sheet } from '../../shared/components/ui'
-import { TrendChart } from './trend-chart'
+import { AppIcon, PageHeader } from '../../shared/components/ui'
 
 function localDate() {
   const date = new Date()
@@ -26,18 +19,14 @@ export function StatisticsPage() {
   const [year, setYear] = useState(Number(today.slice(0, 4)))
   const [selectedDate, setSelectedDate] = useState<string>()
   const [sessions, setSessions] = useState<WorkoutSession[]>([])
-  const [exercises, setExercises] = useState<Exercise[]>([])
   const [availableYears, setAvailableYears] = useState<number[]>([])
-  const [query, setQuery] = useState('')
   useEffect(() => {
     const timer = setTimeout(() => {
       void Promise.all([
         statisticsService.overview(today),
-        statisticsService.listExercises(),
         statisticsService.availableYears(),
-      ]).then(([nextOverview, nextExercises, nextYears]) => {
+      ]).then(([nextOverview, nextYears]) => {
         setOverview(nextOverview)
-        setExercises(nextExercises)
         setAvailableYears(nextYears)
       })
     }, 0)
@@ -47,9 +36,6 @@ export function StatisticsPage() {
     const timer = setTimeout(() => void statisticsService.heatmap(year).then(setDays), 0)
     return () => clearTimeout(timer)
   }, [year])
-  const matchedExercises = exercises.filter((exercise) =>
-    exercise.name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()),
-  )
   const years = [...new Set([Number(today.slice(0, 4)), ...availableYears])].sort(
     (left, right) => right - left,
   )
@@ -104,7 +90,6 @@ export function StatisticsPage() {
           />
         </section>
       )}
-      <TrendCard exercises={exercises} />
       <section className="statistics-section">
         <h2>年度训练热力图</h2>
         {selectedDate && (
@@ -128,209 +113,7 @@ export function StatisticsPage() {
         )}
         <ContributionHeatmap days={days} onSelect={selectDay} year={year} />
       </section>
-      <section className="statistics-section">
-        <h2>动作统计</h2>
-        <label className="search-field">
-          搜索动作
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="输入动作名称"
-          />
-        </label>
-        {matchedExercises.length === 0 ? (
-          <EmptyState title="没有匹配的动作" />
-        ) : (
-          <ul className="exercise-list statistics-exercises">
-            {matchedExercises.map((exercise) => (
-              <li key={exercise.id}>
-                <Link
-                  className="exercise-row__main"
-                  to={`/statistics/exercises/${exercise.id}`}
-                >
-                  <strong>{exercise.name}</strong>
-                  <span>{exercise.archived ? '已归档 · ' : ''}查看统计</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
     </section>
-  )
-}
-
-interface TrendSeries {
-  key: string
-  label: string
-  unit: string
-  values: TrendPoint[]
-}
-
-/**
- * 趋势卡的口径由动作的 loadMode 决定，同一时刻只展示一组折线：
- * 普通负重优先给「估算 1RM / 最高重量」两个口径互切，其余动作退化成单口径。
- */
-function trendSeries(
-  exercise: Exercise | undefined,
-  statistics: ExerciseStatistics | undefined,
-): TrendSeries[] {
-  if (exercise === undefined || statistics === undefined) return []
-  const oneRepMax = statistics.estimatedOneRepMaxTrend
-  const load = statistics.loadTrend
-  if (oneRepMax.length > 0 || load.length > 0) {
-    return [
-      ...(oneRepMax.length > 0
-        ? [{ key: 'oneRepMax', label: '估算 1RM', unit: ' kg', values: oneRepMax }]
-        : []),
-      ...(load.length > 0
-        ? [
-            {
-              key: 'load',
-              label: exercise.loadMode === 'ASSISTANCE' ? '最小辅助' : '最高重量',
-              unit: ' kg',
-              values: load,
-            },
-          ]
-        : []),
-    ]
-  }
-  if (statistics.durationTrend.length > 0) {
-    return [
-      {
-        key: 'duration',
-        label: '训练时长',
-        unit: ' 分钟',
-        values: statistics.durationTrend,
-      },
-    ]
-  }
-  if (statistics.repsTrend.length > 0) {
-    return [{ key: 'reps', label: '最佳次数', unit: ' 次', values: statistics.repsTrend }]
-  }
-  return []
-}
-
-function TrendCard({ exercises }: { exercises: Exercise[] }) {
-  const [exerciseId, setExerciseId] = useState<string>()
-  const [statistics, setStatistics] = useState<ExerciseStatistics>()
-  const [picking, setPicking] = useState(false)
-  const [active, setActive] = useState(0)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      void statisticsService
-        .mostTrainedExerciseId()
-        .then((id) => id !== undefined && setExerciseId(id))
-    }, 0)
-    return () => clearTimeout(timer)
-  }, [])
-  useEffect(() => {
-    if (exerciseId === undefined) return
-    const timer = setTimeout(
-      () => void statisticsService.exerciseStatistics(exerciseId).then(setStatistics),
-      0,
-    )
-    return () => clearTimeout(timer)
-  }, [exerciseId])
-  const exercise = exercises.find((item) => item.id === exerciseId)
-  const series = trendSeries(exercise, statistics)
-  const current = series[active] ?? series[0]
-  return (
-    <section className="statistics-section trend-card">
-      <div className="trend-card__head">
-        <h2>趋势</h2>
-        <button
-          aria-label="选择要查看趋势的动作"
-          className="select-pill"
-          onClick={() => setPicking(true)}
-          type="button"
-        >
-          <span className="select-pill__label">{exercise?.name ?? '选择动作'}</span>
-          <AppIcon name="chevron" size={15} />
-        </button>
-      </div>
-      {current === undefined ? (
-        <p className="field-hint">还没有可以画趋势的训练记录。</p>
-      ) : (
-        <>
-          {series.length > 1 && (
-            <div aria-label="趋势口径" className="filter-buttons" role="group">
-              {series.map((item, index) => (
-                <button
-                  className={index === active ? 'primary-button' : 'quiet-button'}
-                  key={item.key}
-                  onClick={() => setActive(index)}
-                  type="button"
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          )}
-          <TrendChart
-            compact
-            key={`${exerciseId ?? ''}-${current.key}`}
-            unit={current.unit}
-            values={current.values}
-          />
-        </>
-      )}
-      {picking && (
-        <Sheet onClose={() => setPicking(false)} title="选择动作">
-          <ExercisePicker
-            exercises={exercises}
-            onSelect={(id) => {
-              setExerciseId(id)
-              setActive(0)
-              setPicking(false)
-            }}
-          />
-        </Sheet>
-      )}
-    </section>
-  )
-}
-
-function ExercisePicker({
-  exercises,
-  onSelect,
-}: {
-  exercises: Exercise[]
-  onSelect: (exerciseId: string) => void
-}) {
-  const [query, setQuery] = useState('')
-  const matched = exercises.filter((exercise) =>
-    exercise.name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()),
-  )
-  return (
-    <div className="sheet__content">
-      <label className="search-field">
-        筛选动作
-        <input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="输入动作名称"
-        />
-      </label>
-      {matched.length === 0 ? (
-        <EmptyState title="没有匹配的动作" />
-      ) : (
-        <ul className="exercise-list">
-          {matched.map((exercise) => (
-            <li key={exercise.id}>
-              <button
-                className="picker-row"
-                onClick={() => onSelect(exercise.id)}
-                type="button"
-              >
-                <strong>{exercise.name}</strong>
-                <span>{exercise.archived ? '已归档' : ''}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
   )
 }
 

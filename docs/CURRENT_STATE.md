@@ -16,6 +16,7 @@
 07R UI/UX Correction      PASS（待真机最终验收收口）
 09A Exercise Management   PASS（待人工验收）
 09B Exercise Details      PASS（待人工验收）
+09C Statistics Cleanup    PASS（待人工验收）
 ```
 
 Plan 05：
@@ -58,7 +59,7 @@ d4eb68f  rebuild exercises page + add-exercise sheet
 - 核心功能闭环已经完成；Clean Fitness Utility Design System 已冻结并落实到全站；
 - 四个主 Tab、训练 Sheet、记录卡、统计和备份页面已完成视觉重构；
 - Mobile Chromium 的 320–430px 回归、safe-area CSS 和键盘相关核心交互已验证；
-- Plan 09A、09B 已在 `codex/plan-09-exercise-statistics` 分支完成实现与自动化质量门禁，待人工验收；09C 尚未实施。
+- Plan 09A、09B、09C 已在 `codex/plan-09-exercise-statistics` 分支完成实现与自动化质量门禁，待人工验收；生产 `master` 尚未合并本轮迭代。
 
 ### Workout Flow / 导航（已实现）
 
@@ -99,6 +100,12 @@ d4eb68f  rebuild exercises page + add-exercise sheet
 - 辅助重量、自重加负重、纯次数与有氧动作只展示适用指标；旧 `/statistics/exercises/:exerciseId` 地址重定向到详情，归档及无效 ID 可处理；
 - Typecheck、Lint、Vitest（130）、Build、E2E（34）、Prettier 均通过；训练原始数据与数据库 schema version 未改变。
 
+### Plan 09C（已实现，待人工验收）
+
+- 统计首页只保留今年/本月训练次数与时长、年度热力图、年份切换及按日查看多场训练；移除重复的单动作趋势卡、动作选择 Sheet、搜索及长列表；
+- 单动作趋势仍在动作详情中可用，旧统计 URL 兼容保留；
+- Typecheck、Lint、Vitest（129）、Build、E2E（35）、Prettier 均通过；移动 Chromium 触控模拟与 320/390/430px 截图回归通过；数据库 schema version 仍为 `1`。
+
 ## 后续路线
 
 ```text
@@ -114,7 +121,7 @@ d4eb68f  rebuild exercises page + add-exercise sheet
 08  PWA Release                   PASS — v1.0.0 已发布
 09A Exercise Management          PASS — 待人工验收
 09B Exercise Details             PASS — 待人工验收
-09C Statistics Cleanup           NEXT — 待授权
+09C Statistics Cleanup           PASS — 待人工验收
 ```
 
 ## V1.0 发布信息

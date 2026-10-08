@@ -278,16 +278,6 @@ select:focus {
   font-weight: 650;
   white-space: nowrap;
 }
-button.select-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  max-width: 200px;
-}
-.select-pill__label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 .field-hint,
 .exercise-row__main span,
 .family-management > p {
@@ -603,30 +593,10 @@ button.select-pill {
   color: #fff;
   background: var(--color-primary);
 }
-.trend-list {
-  display: grid;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.trend-list li,
-.filter-buttons {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
 .trend-chart {
   display: grid;
   gap: 12px;
   min-width: 0;
-}
-.trend-card__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
 }
 .trend-chart svg {
   width: 100%;
@@ -667,46 +637,9 @@ button.select-pill {
   color: var(--color-primary);
   background: var(--color-primary-soft);
 }
-/* compact：没有下方的日期按钮列表，改由折线圆点自身承担点选。
-   固定高度会让正方形 viewBox 被 preserveAspectRatio 居中，左右各留一大块空白；
-   用 aspect-ratio 让 SVG 与 viewBox 同比例，折线才铺满卡片。 */
-.trend-chart--compact svg {
-  height: auto;
-  aspect-ratio: 100 / 33;
-}
-.trend-chart--compact circle {
-  cursor: pointer;
-  fill-opacity: 0.45;
-}
-.trend-chart--compact circle.trend-point--active {
-  fill-opacity: 1;
-}
-.picker-row {
-  display: grid;
-  width: 100%;
-  gap: 3px;
-  border-top: 1px solid var(--color-divider);
-  border-radius: 0;
-  padding: 12px 0;
-  color: var(--color-text);
-  background: transparent;
-  font-weight: 400;
-  text-align: left;
-}
-.exercise-list li:first-child > .picker-row {
-  border-top: 0;
-}
-.picker-row span {
-  color: var(--color-tertiary);
-  font-size: 14px;
-}
 .trend-tooltip {
   margin: 0;
   color: var(--color-secondary);
-}
-.filter-buttons {
-  justify-content: flex-start;
-  flex-wrap: wrap;
 }
 .exercise-detail-header {
   display: grid;
@@ -1491,9 +1424,7 @@ a:focus-visible {
   }
 }
 
-/* ===== 07R-F：动作页 + 添加动作 Sheet（参考图对齐） =====
-   全部使用新类名，与旧结构隔离：.exercise-row / .exercise-row__main /
-   .picker-row 仍被统计页复用，不要在这里混用或复用它们的间距。 */
+/* ===== 07R-F：动作页 + 添加动作 Sheet（参考图对齐） ===== */
 .exercises-page {
   gap: 12px;
 }

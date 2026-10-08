@@ -32,7 +32,7 @@ describe('StatisticsService', () => {
     await database.delete()
   })
 
-  it('reads live raw data and keeps renamed archived exercises searchable', async () => {
+  it('reads live raw data for renamed and archived exercises', async () => {
     const bench = await exercises.create({
       name: '卧推',
       recordSchema: schema,
@@ -75,13 +75,6 @@ describe('StatisticsService', () => {
       name: '杠铃卧推',
       archived: true,
     })
-    expect((await service.listExercises()).map((exercise) => exercise.name)).toContain(
-      '杠铃卧推',
-    )
-    expect(
-      (await service.listExercises()).find((exercise) => exercise.id === bench.id)
-        ?.archived,
-    ).toBe(true)
     await workouts.updateExerciseRecord(firstRecord.id, { load: 100, reps: 3 })
     expect((await service.exerciseStatistics(bench.id))?.maxLoad).toBe(100)
     expect(
@@ -93,30 +86,5 @@ describe('StatisticsService', () => {
     expect(
       (await service.exerciseDetails(bench.id, '2026-09-15'))?.statistics.setCount,
     ).toBe(0)
-  })
-
-  it('picks the most trained exercise as the trend default, ties broken by id', async () => {
-    expect(await service.mostTrainedExerciseId()).toBeUndefined()
-    const bench = await exercises.create({
-      name: '卧推',
-      recordSchema: schema,
-      loadMode: 'EXTERNAL',
-    })
-    const squat = await exercises.create({
-      name: '深蹲',
-      recordSchema: schema,
-      loadMode: 'EXTERNAL',
-    })
-    const firstDay = await workouts.createSession({ date: '2026-09-14' })
-    await workouts.addExerciseBlock(firstDay.id, bench.id)
-    await workouts.addExerciseBlock(firstDay.id, squat.id)
-    // 1 : 1 时不是「谁先插入谁赢」，而是按 id 排序取小，结果必须可复现。
-    expect(await service.mostTrainedExerciseId()).toBe(
-      [bench.id, squat.id].sort((left, right) => left.localeCompare(right))[0],
-    )
-
-    const secondDay = await workouts.createSession({ date: '2026-09-15' })
-    await workouts.addExerciseBlock(secondDay.id, squat.id)
-    expect(await service.mostTrainedExerciseId()).toBe(squat.id)
   })
 })

@@ -39,7 +39,7 @@ async function logWorkout(
   await page.getByRole('button', { name: '完成训练' }).click()
 }
 
-test('trend card defaults to the most trained exercise and can switch', async ({
+test('keeps single-exercise trends in details after removing the overview trend card', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 })
@@ -66,20 +66,8 @@ test('trend card defaults to the most trained exercise and can switch', async ({
     await expect(page.getByText(label, { exact: true })).toBeVisible()
   }
 
-  // 趋势卡：默认最常练动作，两个口径可互切。
-  const picker = page.getByRole('button', { name: '选择要查看趋势的动作' })
-  await expect(picker).toContainText('趋势卧推')
-  await expect(page.getByRole('button', { name: '估算 1RM', exact: true })).toBeVisible()
-  await expect(page.getByRole('button', { name: '最高重量', exact: true })).toBeVisible()
-  await expect(page.locator('.trend-chart--compact svg')).toBeVisible()
-
-  await picker.click()
-  const sheet = page.getByRole('dialog', { name: '选择动作' })
-  await expect(sheet).toBeVisible()
-  await sheet.getByLabel('筛选动作').fill('深蹲')
-  await sheet.getByRole('button', { name: '趋势深蹲', exact: true }).click()
-  await expect(sheet).toBeHidden()
-  await expect(picker).toContainText('趋势深蹲')
+  await expect(page.getByRole('button', { name: '选择要查看趋势的动作' })).toHaveCount(0)
+  await expect(page.locator('.trend-chart')).toHaveCount(0)
 
   // 月份刻度不能把「1月」折成两行——11px 的列宽装不下，标签需要横跨多列。
   const monthLabels = page.locator('.heatmap-months__label')
@@ -87,4 +75,26 @@ test('trend card defaults to the most trained exercise and can switch', async ({
   const first = await monthLabels.first().boundingBox()
   expect(first).not.toBeNull()
   expect(first!.height).toBeLessThan(16)
+
+  await nav(page).getByRole('link', { name: '动作' }).click()
+  await page.locator('.ex-row').filter({ hasText: '趋势卧推' }).getByRole('link').click()
+  await expect(page.getByRole('heading', { name: '趋势卧推' })).toBeVisible()
+  await page
+    .getByRole('group', { name: '时间范围' })
+    .getByRole('button', { name: '全部' })
+    .click()
+  await expect(
+    page.getByRole('group', { name: '趋势日期' }).getByRole('button'),
+  ).toHaveCount(2)
+  await expect(page.locator('.trend-chart svg')).toBeVisible()
+  await page
+    .getByRole('group', { name: '趋势指标' })
+    .getByRole('button', { name: '估算 1RM' })
+    .click()
+  await expect(page.getByRole('status').last()).toContainText('105 kg')
+
+  await nav(page).getByRole('link', { name: '动作' }).click()
+  await page.locator('.ex-row').filter({ hasText: '趋势深蹲' }).getByRole('link').click()
+  await expect(page.getByRole('heading', { name: '趋势深蹲' })).toBeVisible()
+  await expect(page.getByText('100 kg × 5 次')).toBeVisible()
 })
