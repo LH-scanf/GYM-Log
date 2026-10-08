@@ -5,7 +5,7 @@ import { expect, test, type Page } from '@playwright/test'
  * 07R-F：动作页与「添加动作」Sheet 按参考图重构。
  * 这里锁定参考图的关键结构，防止退回「大按钮 + 大卡片」的旧实现：
  * - 页头：标题 + 右上角紧凑「新建动作」
- * - 系统搜索框 + 全部/常用/已归档 chips + 排序入口 + 「共 N 个动作」
+ * - 系统搜索框 + 身体部位横向分类 + 「共 N 个动作」
  * - 族卡片：图标 + 名称 + N 个动作 + 折叠箭头
  * - 动作行：名称 + 摘要 + 常用星标 + 更多菜单（归档收进菜单）
  * - Sheet：搜索 + 最近/常用/全部 chips + 「最近使用 / 未分组」分组 + 行尾加号
@@ -24,7 +24,7 @@ async function createExercise(page: Page, name: string, family?: string) {
   await page.getByLabel('重量').selectOption('REQUIRED')
   await page.getByLabel('普通负重').check()
   await page.getByRole('button', { name: '保存动作' }).click()
-  await expect(page).toHaveURL(/\/exercises\/[^/]+$/)
+  await expect(page).toHaveURL(/\/exercises$/)
 }
 
 // 访问一次动作页，触发 category 的一次性补全迁移（幂等）。
@@ -51,14 +51,19 @@ test('exercises page follows the reference structure and keeps row actions', asy
   expect(createBox!.height).toBeLessThanOrEqual(44)
   expect(createBox!.width).toBeLessThan(200)
 
-  // 搜索框 + chips + 排序 + 计数行
+  // 搜索框 + 身体部位分类 + 计数行
   await expect(page.getByLabel('搜索动作或动作族')).toBeVisible()
   const chips = page.getByRole('group', { name: '筛选动作' })
-  for (const chip of ['全部', '常用', '已归档']) {
+  for (const chip of ['全部', '胸', '背', '肩', '腿', '手臂', '核心', '有氧', '其他']) {
     await expect(chips.getByRole('button', { name: chip, exact: true })).toBeVisible()
   }
-  await expect(page.getByRole('button', { name: /默认排序/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /默认排序/ })).toHaveCount(0)
+  await expect(chips.getByRole('button', { name: '常用' })).toHaveCount(0)
+  await expect(chips.getByRole('button', { name: '已归档' })).toHaveCount(0)
   await expect(page.getByText('共 2 个动作')).toBeVisible()
+  expect(
+    await chips.evaluate((element) => element.scrollWidth > element.clientWidth),
+  ).toBe(true)
 
   // 族卡片：图标 + 名称 + N 个动作；折叠 / 展开
   const shoulderGroup = page.locator('.ex-group').filter({ hasText: '肩部' })
@@ -69,15 +74,22 @@ test('exercises page follows the reference structure and keeps row actions', asy
   await shoulderHead.click()
   await expect(page.getByText('侧平举（反手）')).toBeVisible()
 
-  // 常用星标 → 「常用」筛选
+  // 常用星标保留，不再作为管理页分类
   const star = shoulderGroup.getByRole('button', { name: '设为常用 侧平举（反手）' })
   await star.click()
   await expect(
     shoulderGroup.getByRole('button', { name: '取消常用 侧平举（反手）' }),
   ).toBeVisible()
-  await chips.getByRole('button', { name: '常用', exact: true }).click()
+  await chips.getByRole('button', { name: '肩', exact: true }).click()
   await expect(page.getByText('侧平举（反手）')).toBeVisible()
   await expect(page.getByText('二头弯举')).toHaveCount(0)
+  await page.getByLabel('搜索动作或动作族').fill('二头')
+  await expect(page.getByText('二头弯举')).toBeVisible()
+  await page.getByLabel('搜索动作或动作族').fill('')
+  await expect(page.getByText('二头弯举')).toHaveCount(0)
+  await page.getByLabel('搜索动作或动作族').fill('肩部')
+  await expect(page.getByText('侧平举（反手）')).toBeVisible()
+  await page.getByLabel('搜索动作或动作族').fill('')
   await chips.getByRole('button', { name: '全部', exact: true }).click()
 
   // 更多菜单收纳归档；搜索可用
@@ -146,7 +158,7 @@ test('add exercise sheet follows the reference structure', async ({ page }) => {
     '肩',
     '手臂',
     '腿',
-    '腹',
+    '核心',
     '有氧',
     '全部',
   ]) {

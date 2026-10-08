@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { exerciseManagementService } from '../../application/exercise-management-service'
-import type { Exercise, ExerciseFamily } from '../../domain/exercise/types'
+import type {
+  Exercise,
+  ExerciseCategory,
+  ExerciseFamily,
+} from '../../domain/exercise/types'
 import { getExerciseSummary } from './exercise-summary'
-import { inferCategory } from './exercise-category'
+import { categoryLabels, inferCategory } from './exercise-category'
 import { officialExerciseCategories } from '../../domain/exercise/category'
 import { AppIcon, EmptyState, PageHeader, Sheet } from '../../shared/components/ui'
 
-type ExerciseFilter = 'all' | 'favorite' | 'archived'
-type SortKey = 'name' | 'created'
+type ExerciseFilter = 'all' | ExerciseCategory
 
 type ExerciseGroup = {
   id: string
@@ -18,22 +21,15 @@ type ExerciseGroup = {
 
 const filterChips: Array<{ key: ExerciseFilter; label: string }> = [
   { key: 'all', label: '全部' },
-  { key: 'favorite', label: '常用' },
-  { key: 'archived', label: '已归档' },
-]
-
-const sortOptions: Array<{ key: SortKey; label: string }> = [
-  { key: 'name', label: '默认排序' },
-  { key: 'created', label: '最近添加' },
+  ...(
+    ['CHEST', 'BACK', 'SHOULDERS', 'LEGS', 'ARMS', 'CORE', 'CARDIO', 'OTHER'] as const
+  ).map((key) => ({ key, label: categoryLabels[key] })),
 ]
 
 export function ExercisesPage() {
   const [searchParams] = useSearchParams()
-  const [filter, setFilter] = useState<ExerciseFilter>(() =>
-    searchParams.get('view') === 'archived' ? 'archived' : 'all',
-  )
-  const [sortKey, setSortKey] = useState<SortKey>('name')
-  const [sortOpen, setSortOpen] = useState(false)
+  const archivedView = searchParams.get('view') === 'archived'
+  const [filter, setFilter] = useState<ExerciseFilter>('all')
   const [collapsedIds, setCollapsedIds] = useState<ReadonlySet<string>>(new Set())
   const [menuExercise, setMenuExercise] = useState<Exercise>()
   const [exercises, setExercises] = useState<Exercise[]>([])
@@ -80,27 +76,20 @@ export function ExercisesPage() {
     const normalizedQuery = query.trim().toLocaleLowerCase()
     const familyById = new Map(families.map((family) => [family.id, family]))
     return exercises.filter((exercise) => {
-      if (filter === 'archived') {
-        if (!exercise.archived) return false
-      } else if (exercise.archived) {
-        return false
+      if (exercise.archived !== archivedView) return false
+      if (normalizedQuery !== '') {
+        const family =
+          exercise.familyId === undefined ? undefined : familyById.get(exercise.familyId)
+        return (
+          exercise.name.toLocaleLowerCase().includes(normalizedQuery) ||
+          family?.name.toLocaleLowerCase().includes(normalizedQuery) === true
+        )
       }
-      if (filter === 'favorite' && exercise.favorite !== true) return false
-      if (normalizedQuery === '') return true
-
-      const family =
-        exercise.familyId === undefined ? undefined : familyById.get(exercise.familyId)
-      return (
-        exercise.name.toLocaleLowerCase().includes(normalizedQuery) ||
-        family?.name.toLocaleLowerCase().includes(normalizedQuery) === true
-      )
+      return archivedView || filter === 'all' || (exercise.category ?? 'OTHER') === filter
     })
-  }, [exercises, families, query, filter])
+  }, [exercises, families, query, filter, archivedView])
 
-  const groups = useMemo(
-    () => groupExercises(visible, families, sortKey),
-    [visible, families, sortKey],
-  )
+  const groups = useMemo(() => groupExercises(visible, families), [visible, families])
   const hasDuplicateNewFamily = families.some(
     (family) =>
       family.name.trim() === newFamilyName.trim() && newFamilyName.trim() !== '',
@@ -217,27 +206,27 @@ export function ExercisesPage() {
   }
 
   const emptyTitle =
-    query.trim() === ''
-      ? filter === 'all'
-        ? '还没有动作。'
-        : filter === 'favorite'
-          ? '还没有常用动作。'
-          : '没有已归档动作。'
-      : '没有匹配的动作。'
-  const activeSortLabel =
-    sortOptions.find((option) => option.key === sortKey)?.label ?? '默认排序'
+    query.trim() !== ''
+      ? '没有匹配的动作。'
+      : archivedView
+        ? '没有已归档动作。'
+        : filter === 'all'
+          ? '还没有动作。'
+          : `还没有${categoryLabels[filter]}动作。`
 
   return (
     <section aria-labelledby="page-title" className="page exercises-page">
       <PageHeader
         action={
-          <Link className="primary-link primary-link--compact" to="/exercises/new">
-            <AppIcon name="add" size={14} />
-            新建动作
-          </Link>
+          archivedView ? undefined : (
+            <Link className="primary-link primary-link--compact" to="/exercises/new">
+              <AppIcon name="add" size={14} />
+              新建动作
+            </Link>
+          )
         }
         headingId="page-title"
-        title="动作"
+        title={archivedView ? '已归档动作' : '动作'}
       />
 
       {error === undefined ? null : (
@@ -257,8 +246,12 @@ export function ExercisesPage() {
         />
       </label>
 
-      <div className="ex-toolbar">
-        <div aria-label="筛选动作" className="chip-row" role="group">
+      {archivedView ? (
+        <Link className="quiet-link-button" onClick={() => setQuery('')} to="/exercises">
+          返回动作列表
+        </Link>
+      ) : (
+        <div aria-label="筛选动作" className="chip-row chip-row--scroll" role="group">
           {filterChips.map((chip) => (
             <button
               aria-pressed={filter === chip.key}
@@ -271,12 +264,7 @@ export function ExercisesPage() {
             </button>
           ))}
         </div>
-        <button className="sort-entry" onClick={() => setSortOpen(true)} type="button">
-          <AppIcon name="sort" size={14} />
-          {activeSortLabel}
-          <AppIcon className="sort-entry__caret" name="chevron" size={12} />
-        </button>
-      </div>
+      )}
 
       {isLoading ? (
         <p role="status">正在加载动作…</p>
@@ -326,7 +314,7 @@ export function ExercisesPage() {
                               )}
                             </span>
                           </Link>
-                          {filter === 'archived' ? null : (
+                          {archivedView ? null : (
                             <button
                               aria-label={
                                 exercise.favorite === true
@@ -361,6 +349,15 @@ export function ExercisesPage() {
       )}
 
       <div className="ex-page-footer">
+        {archivedView ? null : (
+          <Link
+            className="quiet-link-button"
+            onClick={() => setQuery('')}
+            to="/exercises?view=archived"
+          >
+            管理已归档动作
+          </Link>
+        )}
         <button
           className="quiet-link-button"
           onClick={() => setFamilyManagerOpen(true)}
@@ -369,31 +366,6 @@ export function ExercisesPage() {
           管理动作族
         </button>
       </div>
-
-      {sortOpen && (
-        <Sheet onClose={() => setSortOpen(false)} title="排序">
-          <div className="row-menu">
-            {sortOptions.map((option) => (
-              <button
-                aria-pressed={option.key === sortKey}
-                className={
-                  option.key === sortKey
-                    ? 'row-menu__item row-menu__item--active'
-                    : 'row-menu__item'
-                }
-                key={option.key}
-                onClick={() => {
-                  setSortKey(option.key)
-                  setSortOpen(false)
-                }}
-                type="button"
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-        </Sheet>
-      )}
 
       {menuExercise && (
         <Sheet
@@ -522,7 +494,6 @@ export function ExercisesPage() {
 function groupExercises(
   exercises: Exercise[],
   families: ExerciseFamily[],
-  sortKey: SortKey,
 ): ExerciseGroup[] {
   const familyById = new Map(families.map((family) => [family.id, family]))
   const groups = new Map<string, ExerciseGroup>()
@@ -542,15 +513,9 @@ function groupExercises(
     return left.name.localeCompare(right.name)
   })
   for (const group of sorted) {
-    group.exercises = sortExercises(group.exercises, sortKey)
-  }
-  return sorted
-}
-
-function sortExercises(exercises: Exercise[], sortKey: SortKey): Exercise[] {
-  const sorted = [...exercises].sort((left, right) => left.name.localeCompare(right.name))
-  if (sortKey === 'created') {
-    sorted.sort((left, right) => right.createdAt.localeCompare(left.createdAt))
+    group.exercises = [...group.exercises].sort((left, right) =>
+      left.name.localeCompare(right.name),
+    )
   }
   return sorted
 }

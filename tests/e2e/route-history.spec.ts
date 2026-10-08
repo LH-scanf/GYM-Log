@@ -16,7 +16,7 @@ async function createExercise(page: Page, name: string) {
   await page.getByLabel('重量').selectOption('REQUIRED')
   await page.getByLabel('普通负重').check()
   await page.getByRole('button', { name: '保存动作' }).click()
-  await expect(page).toHaveURL(/\/exercises\/[^/]+$/)
+  await expect(page).toHaveURL(/\/exercises$/)
 }
 
 test('replaces history when switching between the bottom tabs', async ({ page }) => {

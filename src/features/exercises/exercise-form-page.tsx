@@ -163,11 +163,13 @@ export function ExerciseFormPage({ mode }: ExerciseFormPageProps) {
         recordSchema: schema,
         loadMode,
       }
-      const exercise =
-        mode === 'edit' && exerciseId
-          ? await exerciseManagementService.updateExercise(exerciseId, input)
-          : await exerciseManagementService.createExercise(input)
-      navigate(`/exercises/${exercise.id}`, { replace: mode === 'edit' })
+      if (mode === 'edit' && exerciseId) {
+        const exercise = await exerciseManagementService.updateExercise(exerciseId, input)
+        navigate(`/exercises/${exercise.id}`, { replace: true })
+      } else {
+        await exerciseManagementService.createExercise(input)
+        navigate('/exercises', { replace: true })
+      }
     } catch (saveError) {
       setError(getErrorMessage(saveError, '无法保存动作。'))
     } finally {

@@ -1,6 +1,6 @@
 # GymLog 当前状态
 
-最后更新：2026-09-17
+最后更新：2026-10-08
 
 ## 已完成
 
@@ -14,6 +14,7 @@
 06 Import / Export        PASS
 07 UI/UX Polish           PASS
 07R UI/UX Correction      PASS（待真机最终验收收口）
+09A Exercise Management   PASS（待人工验收）
 ```
 
 Plan 05：
@@ -56,7 +57,7 @@ d4eb68f  rebuild exercises page + add-exercise sheet
 - 核心功能闭环已经完成；Clean Fitness Utility Design System 已冻结并落实到全站；
 - 四个主 Tab、训练 Sheet、记录卡、统计和备份页面已完成视觉重构；
 - Mobile Chromium 的 320–430px 回归、safe-area CSS 和键盘相关核心交互已验证；
-- 下一阶段：Plan 08 — PWA Release（进行中，只做 V1.0 收口，不新增产品功能）。
+- Plan 09A 已在 `codex/plan-09-exercise-statistics` 分支完成实现与自动化质量门禁，待人工验收；09B、09C 尚未实施。
 
 ### Workout Flow / 导航（已实现）
 
@@ -70,7 +71,7 @@ d4eb68f  rebuild exercises page + add-exercise sheet
 ### Exercise Picker（已实现）
 
 - 训练中「添加动作」打开 Bottom Sheet：搜索 + 最近使用 + 按 Family 分组；
-- 顶部筛选：最近 / 常用 + 8 个身体部位（胸/背/肩/手臂/腿/腹/有氧）+ 全部；
+- 顶部筛选：最近 / 常用 + 8 个身体部位（胸/背/肩/手臂/腿/核心/有氧/其他）+ 全部；
 - 已归档动作默认隐藏；部位内按 Family 分组；点动作立即添加 Block 并关闭 Sheet。
 
 ### Exercise.category（已收口为一等属性）
@@ -82,6 +83,13 @@ d4eb68f  rebuild exercises page + add-exercise sheet
 - 兜底迁移 `reconcileExerciseCategories`：已有 category 一律尊重、不覆盖，只对 `category===undefined` 的旧数据兜底（官方命中用官方值，未命中用 infer）；因此重复进入动作页幂等无副作用，用户手动改过、备份恢复回来的分类都永久保留；
 - 新建/编辑动作页在「动作名称」与「动作族」之间新增「身体部位」选择：新建用 `inferCategory` 作建议可改，编辑回显当前值可改，改名不重置 category；
 - category 与 ExerciseFamily 完全独立；未升级 Dexie schema version、未新增数据库索引。
+
+### Plan 09A（已实现，待人工验收）
+
+- 动作管理页改为横向滚动的全部及 8 个身体部位分类；`CORE` 显示为“核心”，搜索跨所有未归档分类及动作族名称；
+- 删除管理页排序与“常用/已归档”分类，星标功能保留；已归档动作通过 `?view=archived` 二级入口管理；
+- 新建动作保存成功返回“全部”列表，失败停留表单；点击列表动作仍进入现有编辑页；
+- Typecheck、Lint、Vitest（126）、Build、E2E（31）、Prettier 均通过；数据库 schema version 仍为 `1`。
 
 ## 后续路线
 
@@ -96,6 +104,9 @@ d4eb68f  rebuild exercises page + add-exercise sheet
 07  UI/UX Polish & Design System  PASS
 07R UI/UX Correction              PASS
 08  PWA Release                   PASS — v1.0.0 已发布
+09A Exercise Management          PASS — 待人工验收
+09B Exercise Details             NEXT — 尚未授权
+09C Statistics Cleanup           PLANNED
 ```
 
 ## V1.0 发布信息

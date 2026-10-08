@@ -12,7 +12,7 @@
 3. `docs/ARCHITECTURE.md` — 工程边界与技术约束；
 4. `docs/DATA_MODEL.md` — 数据语义、实体关系与持久化规则；
 5. `docs/CURRENT_STATE.md` — 当前真实进度、已完成阶段与下一步；
-6. 当前被授权的 `docs/plans/<PLAN>.md`。
+6. 当前被授权的 `docs/plans/<PLAN>.md`，或分组目录中的 `docs/plans/<SERIES>/<PLAN>.md`。
 
 优先级：
 
