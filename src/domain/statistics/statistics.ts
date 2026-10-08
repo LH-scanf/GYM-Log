@@ -16,7 +16,12 @@ export interface HeatmapDay {
 
 export interface TrendPoint {
   date: string
+  endDate?: string
   value: number
+}
+
+export function estimateOneRepMax(load: number, reps: number): number {
+  return load * (1 + reps / 30)
 }
 
 export interface ExerciseHistoryEntry {
@@ -154,7 +159,10 @@ export function calculateExerciseStatistics(
     ? maximum(
         records
           .filter((record) => (record.load ?? 0) > 0 && (record.reps ?? 0) > 0)
-          .map((record) => ({ ...record, load: record.load! * (1 + record.reps! / 30) })),
+          .map((record) => ({
+            ...record,
+            load: estimateOneRepMax(record.load!, record.reps!),
+          })),
         'load',
       )
     : undefined
@@ -162,7 +170,7 @@ export function calculateExerciseStatistics(
     ? grouped.flatMap(({ date, records: sessionRecords }) => {
         const values = sessionRecords
           .filter((record) => (record.load ?? 0) > 0 && (record.reps ?? 0) > 0)
-          .map((record) => record.load! * (1 + record.reps! / 30))
+          .map((record) => estimateOneRepMax(record.load!, record.reps!))
         return values.length ? [{ date, value: Math.max(...values) }] : []
       })
     : []

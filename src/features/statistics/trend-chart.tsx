@@ -14,66 +14,104 @@ export function TrendChart({
   values,
   unit,
   compact = false,
+  domainStart,
+  domainEnd,
 }: {
   values: TrendPoint[]
   unit: string
   compact?: boolean
+  domainStart?: string
+  domainEnd?: string
 }) {
   // 默认停在最新一次采样上——打开统计页的人想知道的是"现在多少"。
   const [selected, setSelected] = useState(() => Math.max(0, values.length - 1))
+  if (values.length === 0) return <p className="field-hint">暂无可用数据。</p>
+
   const low = Math.min(...values.map((point) => point.value))
   const high = Math.max(...values.map((point) => point.value))
-  const range = high - low || 1
+  const valueRange = high - low || 1
+  const start = Date.parse(`${domainStart ?? values[0].date}T00:00:00Z`)
+  const end = Date.parse(`${domainEnd ?? values.at(-1)?.date}T00:00:00Z`)
+  const dateRange = end - start
   const coordinates = values.map((point, index) => ({
-    x: values.length === 1 ? 50 : 5 + (90 * index) / (values.length - 1),
-    y: 90 - ((point.value - low) / range) * 80,
+    x:
+      dateRange === 0
+        ? 50
+        : 10 + (80 * (Date.parse(`${point.date}T00:00:00Z`) - start)) / dateRange,
+    y: high === low ? 25 : 40 - ((point.value - low) / valueRange) * 30,
+    index,
   }))
-  const point = values[selected] ?? values[0]
-  const label = (item: TrendPoint) => `${item.date}：${formatMetric(item.value)}${unit}`
+  const active = Math.min(selected, values.length - 1)
+  const point = values[active]
+  const dateLabel = (item: TrendPoint) =>
+    item.endDate && item.endDate !== item.date
+      ? `${item.date} 至 ${item.endDate}`
+      : item.date
+  const label = (item: TrendPoint) =>
+    `${dateLabel(item)}：${formatMetric(item.value)}${unit}`
   return (
     <>
       <div className={`trend-chart${compact ? ' trend-chart--compact' : ''}`}>
-        <svg viewBox="0 0 100 100" role="img" aria-label={label(point)}>
+        <svg
+          aria-label="趋势数据点"
+          preserveAspectRatio="none"
+          role="group"
+          viewBox="0 0 100 50"
+        >
           <polyline
             points={coordinates.map((item) => `${item.x},${item.y}`).join(' ')}
             fill="none"
             stroke="currentColor"
-            strokeWidth="2"
+            strokeWidth="0.7"
           />
-          {coordinates.map((item, index) =>
-            compact ? (
+          {coordinates.map((item) => (
+            <g key={`${values[item.index].date}-${item.index}`}>
               <circle
-                aria-label={label(values[index])}
-                className={`trend-point${selected === index ? ' trend-point--active' : ''}`}
+                className={`trend-point${active === item.index ? ' trend-point--active' : ''}`}
                 cx={item.x}
                 cy={item.y}
-                key={index}
-                onClick={() => setSelected(index)}
-                r="3"
+                r="1.5"
+              />
+              <circle
+                aria-label={label(values[item.index])}
+                className="trend-point-hit"
+                cx={item.x}
+                cy={item.y}
+                onClick={() => setSelected(item.index)}
+                onFocus={() => setSelected(item.index)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    setSelected(item.index)
+                  }
+                }}
+                r="9"
                 role="button"
                 tabIndex={0}
               />
-            ) : (
-              <circle key={index} cx={item.x} cy={item.y} r="3" />
-            ),
-          )}
+            </g>
+          ))}
         </svg>
         {!compact && (
-          <div className="filter-buttons" aria-label="趋势数据点">
+          <div aria-label="趋势日期" className="trend-chart__point-list" role="group">
             {values.map((item, index) => (
               <button
+                aria-pressed={active === index}
+                className="trend-chart__point-button"
                 key={`${item.date}-${index}`}
-                className={selected === index ? 'primary-button' : 'quiet-button'}
                 onClick={() => setSelected(index)}
+                type="button"
               >
-                {item.date.slice(5)}
+                {item.endDate
+                  ? `${item.date.slice(5)}–${item.endDate.slice(5)}`
+                  : item.date.slice(5)}
               </button>
             ))}
           </div>
         )}
       </div>
       <p className="trend-tooltip" role="status">
-        {point.date}：
+        {dateLabel(point)}：
         <strong>
           {formatMetric(point.value)}
           {unit}

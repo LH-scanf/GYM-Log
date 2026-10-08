@@ -13,7 +13,7 @@
 07 UI/UX Polish & Design System  PASS
 08 PWA Release                   PASS
 09A Exercise Management         PASS — 待人工验收
-09B Exercise Details            PROPOSED
+09B Exercise Details            PASS — 待人工验收
 09C Statistics Cleanup          PROPOSED
 ```
 
@@ -38,7 +38,7 @@ Plan 07 不新增业务功能，不修改数据库 Schema。
 
 已完成离线、更新、真机 Smoke、部署和 V1 Release 收口，详见 `CURRENT_STATE.md`。
 
-## 09 — 动作与统计体验优化（待审核）
+## 09 — 动作与统计体验优化（实施中）
 
 总体设计：[`09_EXERCISE_STATISTICS/DESIGN.md`](09_EXERCISE_STATISTICS/DESIGN.md)。
 
@@ -48,6 +48,6 @@ Plan 07 不新增业务功能，不修改数据库 Schema。
 2. [`09B_EXERCISE_DETAILS.md`](09_EXERCISE_STATISTICS/09B_EXERCISE_DETAILS.md)：动作详情、独立编辑路由、趋势与旧统计链接兼容。
 3. [`09C_STATISTICS_CLEANUP.md`](09_EXERCISE_STATISTICS/09C_STATISTICS_CLEANUP.md)：统计首页精简及整体回归。
 
-09A 已在 `codex/plan-09-exercise-statistics` 实现并通过自动化门禁，待人工验收。09B、09C 尚未实施。生产从 `master` 部署；三个 Plan 全部验收后再合并功能分支，并按 `AGENTS.md` 收口。
+09A、09B 已在 `codex/plan-09-exercise-statistics` 实现并通过自动化门禁，待人工验收。09C 尚未实施。生产从 `master` 部署；三个 Plan 全部验收后再合并功能分支，并按 `AGENTS.md` 收口。
 
 通用 Agent 工作规则统一遵循根目录 `AGENTS.md`。

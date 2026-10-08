@@ -184,7 +184,13 @@ export function ExerciseFormPage({ mode }: ExerciseFormPageProps) {
   return (
     <section aria-labelledby="page-title" className="page exercise-form-page">
       <TopBar
-        backTo={<Link to="/exercises">返回动作列表</Link>}
+        backTo={
+          <Link
+            to={mode === 'edit' && exerciseId ? `/exercises/${exerciseId}` : '/exercises'}
+          >
+            {mode === 'edit' ? '返回动作详情' : '返回动作列表'}
+          </Link>
+        }
         headingId="page-title"
         title={mode === 'create' ? '新建动作' : '编辑动作'}
       />

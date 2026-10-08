@@ -20,6 +20,10 @@ test('manages an exercise family and exercise on a mobile device', async ({ page
   await expect(page).toHaveURL(/\/exercises$/)
   await expect(page.getByText('反向山羊挺身')).toBeVisible()
   await page.getByRole('link', { name: /反向山羊挺身/ }).click()
+  await expect(page.getByRole('heading', { name: '动作详情' })).toBeVisible()
+  await expect(page.getByText('核心')).toBeVisible()
+  await page.getByRole('link', { name: '编辑' }).click()
+  await expect(page).toHaveURL(/\/exercises\/[^/]+\/edit$/)
   await expect(page.getByRole('heading', { name: '编辑动作' })).toBeVisible()
   await expect(page.getByLabel('动作名称')).toHaveValue('反向山羊挺身')
   // 编辑时显示当前值（手动改的核心）
@@ -30,8 +34,11 @@ test('manages an exercise family and exercise on a mobile device', async ({ page
 
   await page.getByLabel('动作名称').fill('反向山羊挺身（器械）')
   await page.getByRole('button', { name: '保存动作' }).click()
+  await expect(page).toHaveURL(/\/exercises\/[^/]+$/)
+  await page.getByRole('link', { name: '编辑' }).click()
   // 改名不得重置分类：仍是手动设的「核心」
   await expect(page.getByLabel('身体部位')).toHaveValue('CORE')
+  await page.getByRole('link', { name: '返回动作详情' }).click()
   await page.getByRole('link', { name: '返回动作列表' }).click()
   await expect(page.getByText('反向山羊挺身（器械）')).toBeVisible()
 
@@ -52,6 +59,10 @@ test('manages an exercise family and exercise on a mobile device', async ({ page
   await expect(page.getByText('反向山羊挺身（器械）')).toBeVisible()
 
   const archivedRow = page.locator('.ex-row').filter({ hasText: '反向山羊挺身（器械）' })
+  await archivedRow.getByRole('link').click()
+  await expect(page.getByRole('heading', { name: '反向山羊挺身（器械）' })).toBeVisible()
+  await page.goBack()
+  await expect(page).toHaveURL(/\/exercises\?view=archived$/)
   await archivedRow.getByRole('button', { name: '反向山羊挺身（器械） 更多操作' }).click()
   await page
     .getByRole('dialog', { name: '反向山羊挺身（器械）' })

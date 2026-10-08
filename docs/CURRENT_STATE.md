@@ -15,6 +15,7 @@
 07 UI/UX Polish           PASS
 07R UI/UX Correction      PASS（待真机最终验收收口）
 09A Exercise Management   PASS（待人工验收）
+09B Exercise Details      PASS（待人工验收）
 ```
 
 Plan 05：
@@ -57,7 +58,7 @@ d4eb68f  rebuild exercises page + add-exercise sheet
 - 核心功能闭环已经完成；Clean Fitness Utility Design System 已冻结并落实到全站；
 - 四个主 Tab、训练 Sheet、记录卡、统计和备份页面已完成视觉重构；
 - Mobile Chromium 的 320–430px 回归、safe-area CSS 和键盘相关核心交互已验证；
-- Plan 09A 已在 `codex/plan-09-exercise-statistics` 分支完成实现与自动化质量门禁，待人工验收；09B、09C 尚未实施。
+- Plan 09A、09B 已在 `codex/plan-09-exercise-statistics` 分支完成实现与自动化质量门禁，待人工验收；09C 尚未实施。
 
 ### Workout Flow / 导航（已实现）
 
@@ -91,6 +92,13 @@ d4eb68f  rebuild exercises page + add-exercise sheet
 - 新建动作保存成功返回“全部”列表，失败停留表单；点击列表动作仍进入现有编辑页；
 - Typecheck、Lint、Vitest（126）、Build、E2E（31）、Prettier 均通过；数据库 schema version 仍为 `1`。
 
+### Plan 09B（已实现，待人工验收）
+
+- `/exercises/:exerciseId` 展示只读详情、按记录方式适配的训练概览及一张可交互趋势图；独立 `/edit` 地址保留既有编辑能力；
+- 周/月/全部分别覆盖最近 7 天、最近 30 天及完整历史；按数据跨度以日/自然周/自然月聚合，无记录日期不补零；外部负重复用 Epley 公式；
+- 辅助重量、自重加负重、纯次数与有氧动作只展示适用指标；旧 `/statistics/exercises/:exerciseId` 地址重定向到详情，归档及无效 ID 可处理；
+- Typecheck、Lint、Vitest（130）、Build、E2E（34）、Prettier 均通过；训练原始数据与数据库 schema version 未改变。
+
 ## 后续路线
 
 ```text
@@ -105,8 +113,8 @@ d4eb68f  rebuild exercises page + add-exercise sheet
 07R UI/UX Correction              PASS
 08  PWA Release                   PASS — v1.0.0 已发布
 09A Exercise Management          PASS — 待人工验收
-09B Exercise Details             NEXT — 尚未授权
-09C Statistics Cleanup           PLANNED
+09B Exercise Details             PASS — 待人工验收
+09C Statistics Cleanup           NEXT — 待授权
 ```
 
 ## V1.0 发布信息

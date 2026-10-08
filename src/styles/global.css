@@ -297,6 +297,7 @@ button.select-pill {
 }
 .exercise-groups,
 .exercise-form,
+.exercise-details-page,
 .family-management,
 .settings-page,
 .statistics-page,
@@ -305,6 +306,8 @@ button.select-pill {
   gap: 16px;
 }
 .exercise-group,
+.exercise-detail-header,
+.exercise-detail-metric,
 .family-management,
 .exercise-form,
 .settings-card,
@@ -320,6 +323,7 @@ button.select-pill {
   background: var(--color-surface);
 }
 .exercise-group h2,
+.exercise-detail-header h2,
 .family-management h2,
 .settings-card h2,
 .backup-summary h3,
@@ -616,6 +620,7 @@ button.select-pill {
 .trend-chart {
   display: grid;
   gap: 12px;
+  min-width: 0;
 }
 .trend-card__head {
   display: flex;
@@ -625,13 +630,42 @@ button.select-pill {
 }
 .trend-chart svg {
   width: 100%;
-  height: 128px;
+  height: 160px;
   overflow: visible;
   color: var(--color-primary);
   border-bottom: 1px solid var(--color-border);
 }
 .trend-chart circle {
   fill: var(--color-primary);
+}
+.trend-chart circle.trend-point-hit {
+  cursor: pointer;
+  fill: transparent;
+}
+.trend-chart circle.trend-point-hit:focus-visible {
+  stroke: var(--color-primary);
+  stroke-width: 0.8;
+}
+.trend-chart__point-list {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+  overflow-x: auto;
+}
+.trend-chart__point-button {
+  flex: 0 0 auto;
+  min-height: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 8px 10px;
+  color: var(--color-secondary);
+  background: var(--color-surface);
+  font-size: 13px;
+}
+.trend-chart__point-button[aria-pressed='true'] {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
 }
 /* compact：没有下方的日期按钮列表，改由折线圆点自身承担点选。
    固定高度会让正方形 viewBox 被 preserveAspectRatio 居中，左右各留一大块空白；
@@ -673,6 +707,73 @@ button.select-pill {
 .filter-buttons {
   justify-content: flex-start;
   flex-wrap: wrap;
+}
+.exercise-detail-header {
+  display: grid;
+  gap: 8px;
+}
+.exercise-detail-header__title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.exercise-detail-header h2 {
+  overflow-wrap: anywhere;
+  font-size: 22px;
+}
+.exercise-detail-header p {
+  margin: 0;
+  color: var(--color-secondary);
+}
+.exercise-detail-header__archived {
+  border-radius: 999px;
+  padding: 4px 8px;
+  color: var(--color-tertiary);
+  background: var(--color-subtle);
+  font-size: 12px;
+}
+.exercise-detail-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.exercise-detail-metric {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.exercise-detail-metric span {
+  color: var(--color-secondary);
+  font-size: 13px;
+}
+.exercise-detail-metric strong {
+  overflow-wrap: anywhere;
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+.exercise-detail-trend {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.exercise-detail-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.exercise-detail-switch button {
+  min-height: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 8px 14px;
+  color: var(--color-secondary);
+  background: var(--color-surface);
+}
+.exercise-detail-switch button[aria-pressed='true'] {
+  border-color: transparent;
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
 }
 .workout-card {
   display: grid;

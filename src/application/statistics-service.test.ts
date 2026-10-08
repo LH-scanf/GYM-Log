@@ -56,8 +56,25 @@ describe('StatisticsService', () => {
       month: { count: 1, duration: 75 },
     })
     expect((await service.exerciseStatistics(bench.id))?.trainingCount).toBe(1)
+    expect(
+      (await service.exerciseDetails(bench.id, '2026-09-15'))?.statistics
+        .maxLoadPerformance,
+    ).toEqual({
+      load: 90,
+      reps: 5,
+      date: '2026-09-15',
+    })
+    expect(
+      await service.exerciseDetails('missing-exercise', '2026-09-15'),
+    ).toBeUndefined()
     await exercises.rename(bench.id, '杠铃卧推')
     await exercises.archive(bench.id)
+    expect(
+      (await service.exerciseDetails(bench.id, '2026-09-15'))?.exercise,
+    ).toMatchObject({
+      name: '杠铃卧推',
+      archived: true,
+    })
     expect((await service.listExercises()).map((exercise) => exercise.name)).toContain(
       '杠铃卧推',
     )
@@ -67,8 +84,15 @@ describe('StatisticsService', () => {
     ).toBe(true)
     await workouts.updateExerciseRecord(firstRecord.id, { load: 100, reps: 3 })
     expect((await service.exerciseStatistics(bench.id))?.maxLoad).toBe(100)
+    expect(
+      (await service.exerciseDetails(bench.id, '2026-09-15'))?.statistics
+        .maxLoadPerformance?.load,
+    ).toBe(100)
     await workouts.deleteWorkoutSession(workout.id)
     expect((await service.exerciseStatistics(bench.id))?.trainingCount).toBe(0)
+    expect(
+      (await service.exerciseDetails(bench.id, '2026-09-15'))?.statistics.setCount,
+    ).toBe(0)
   })
 
   it('picks the most trained exercise as the trend default, ties broken by id', async () => {

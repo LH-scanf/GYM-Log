@@ -10,6 +10,7 @@ import {
   type HeatmapDay,
   type OverviewStatistics,
 } from '../domain/statistics/statistics'
+import { calculateExerciseDetails } from '../domain/statistics/exercise-details'
 import type { WorkoutSession } from '../domain/workout/types'
 
 export class StatisticsService {
@@ -67,6 +68,19 @@ export class StatisticsService {
       exercise,
       await this.workouts.listExerciseHistory(exerciseId),
     )
+  }
+
+  async exerciseDetails(exerciseId: string, referenceDate: string) {
+    const exercise = await this.exercises.getById(exerciseId)
+    if (exercise === undefined) return undefined
+    return {
+      exercise,
+      statistics: calculateExerciseDetails(
+        exercise,
+        await this.workouts.listExerciseHistory(exerciseId),
+        referenceDate,
+      ),
+    }
   }
 
   getExercise(exerciseId: string) {
