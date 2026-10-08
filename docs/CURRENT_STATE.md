@@ -59,7 +59,7 @@ d4eb68f  rebuild exercises page + add-exercise sheet
 - 核心功能闭环已经完成；Clean Fitness Utility Design System 已冻结并落实到全站；
 - 四个主 Tab、训练 Sheet、记录卡、统计和备份页面已完成视觉重构；
 - Mobile Chromium 的 320–430px 回归、safe-area CSS 和键盘相关核心交互已验证；
-- Plan 09A、09B、09C 已在 `codex/plan-09-exercise-statistics` 分支完成实现与自动化质量门禁，待人工验收；生产 `master` 尚未合并本轮迭代。
+- Plan 09A、09B、09C 已通过自动化质量门禁；功能分支快进合入生产 `master`（`be57b6c`），Cloudflare Pages 部署检查成功，待 iPhone 真机验收。
 
 ### Workout Flow / 导航（已实现）
 
